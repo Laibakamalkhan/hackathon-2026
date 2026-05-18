@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "80944026997",
+    "project_id": "ai-seekho--01",
+    "storage_bucket": "ai-seekho--01.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:80944026997:android:3d49c28085576e06b62f3c",
+        "android_client_info": {
+          "package_name": "com.aiseekho.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjvEL3oJMeTMNHq8oBauXv4s8K45__kjs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

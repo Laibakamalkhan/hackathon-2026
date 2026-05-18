@@ -1,0 +1,3285 @@
+[
+  {
+    "pid": "P001",
+    "name": "Hassan Mahmood",
+    "phone": "+92-300-8529323",
+    "service_categories": [
+      "general_home",
+      "mechanics"
+    ],
+    "specializations": [
+      "sofa_cleaning",
+      "pest_control",
+      "wall_painting"
+    ],
+    "experience_years": 10,
+    "rating": 4.9,
+    "rating_count": 164,
+    "on_time_score": 0.92,
+    "cancellation_rate": 0.07,
+    "base_rate_pkr": 1100,
+    "per_km_rate": 30,
+    "location": {
+      "area": "H-13",
+      "lat": 33.62621,
+      "lng": 72.95738
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.07,
+    "recent_reviews": [
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-04-27"
+      },
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-05-14"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-04-23"
+      },
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-04-26"
+      }
+    ]
+  },
+  {
+    "pid": "P002",
+    "name": "Farhan Siddiqui",
+    "phone": "+92-300-6077731",
+    "service_categories": [
+      "ac_repair"
+    ],
+    "specializations": [
+      "compressor_fixing",
+      "inverter_ac"
+    ],
+    "experience_years": 11,
+    "rating": 4.08,
+    "rating_count": 199,
+    "on_time_score": 0.78,
+    "cancellation_rate": 0.06,
+    "base_rate_pkr": 950,
+    "per_km_rate": 40,
+    "location": {
+      "area": "F-11",
+      "lat": 33.68491,
+      "lng": 72.99294
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.01,
+    "recent_reviews": [
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-04-20"
+      },
+      {
+        "text": "Bahut mahir karigar hain. Highly professional team.",
+        "rating": 5,
+        "date": "2026-04-24"
+      }
+    ]
+  },
+  {
+    "pid": "P003",
+    "name": "Yasmin Begum",
+    "phone": "+92-300-1632069",
+    "service_categories": [
+      "general_home"
+    ],
+    "specializations": [
+      "wall_painting"
+    ],
+    "experience_years": 7,
+    "rating": 3.89,
+    "rating_count": 174,
+    "on_time_score": 0.78,
+    "cancellation_rate": 0.06,
+    "base_rate_pkr": 1000,
+    "per_km_rate": 30,
+    "location": {
+      "area": "E-11",
+      "lat": 33.69772,
+      "lng": 72.98746
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": false,
+    "risk_score": 0.16,
+    "recent_reviews": [
+      {
+        "text": "Bahut mahir karigar hain. Highly professional team.",
+        "rating": 5,
+        "date": "2026-04-23"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-04-18"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-04-27"
+      },
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-05-09"
+      }
+    ]
+  },
+  {
+    "pid": "P004",
+    "name": "Arsalan Siddiqui",
+    "phone": "+92-300-3465145",
+    "service_categories": [
+      "plumbing"
+    ],
+    "specializations": [
+      "geyser_repair",
+      "drain_cleaning",
+      "leak_detection"
+    ],
+    "experience_years": 13,
+    "rating": 4.36,
+    "rating_count": 58,
+    "on_time_score": 0.78,
+    "cancellation_rate": 0.07,
+    "base_rate_pkr": 550,
+    "per_km_rate": 30,
+    "location": {
+      "area": "I-8",
+      "lat": 33.65997,
+      "lng": 73.07028
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.01,
+    "recent_reviews": [
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-04-21"
+      },
+      {
+        "text": "Kaam tou theek tha, lekin thora late aaye.",
+        "rating": 3,
+        "date": "2026-04-28"
+      }
+    ]
+  },
+  {
+    "pid": "P005",
+    "name": "Zeeshan Qureshi",
+    "phone": "+92-300-4822634",
+    "service_categories": [
+      "mechanics"
+    ],
+    "specializations": [
+      "efi_scanning",
+      "brake_servicing"
+    ],
+    "experience_years": 7,
+    "rating": 4.22,
+    "rating_count": 285,
+    "on_time_score": 0.83,
+    "cancellation_rate": 0.08,
+    "base_rate_pkr": 1200,
+    "per_km_rate": 40,
+    "location": {
+      "area": "E-11",
+      "lat": 33.70584,
+      "lng": 72.98658
+    },
+    "availability_slots": [
+      "2026-05-18T11:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.01,
+    "recent_reviews": [
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-05-16"
+      },
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-05-01"
+      },
+      {
+        "text": "Kaam tou theek tha, lekin thora late aaye.",
+        "rating": 3,
+        "date": "2026-05-14"
+      },
+      {
+        "text": "Bahut mahir karigar hain. Highly professional team.",
+        "rating": 5,
+        "date": "2026-04-21"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-05-01"
+      }
+    ]
+  },
+  {
+    "pid": "P006",
+    "name": "Faisal Mughal",
+    "phone": "+92-300-2314082",
+    "service_categories": [
+      "beauty",
+      "mechanics"
+    ],
+    "specializations": [
+      "threading_facial",
+      "henna_art",
+      "bridal_makeup"
+    ],
+    "experience_years": 5,
+    "rating": 4.24,
+    "rating_count": 246,
+    "on_time_score": 0.92,
+    "cancellation_rate": 0.08,
+    "base_rate_pkr": 1650,
+    "per_km_rate": 45,
+    "location": {
+      "area": "G-11",
+      "lat": 33.66433,
+      "lng": 73.00894
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.05,
+    "recent_reviews": [
+      {
+        "text": "Bahut mahir karigar hain. Highly professional team.",
+        "rating": 5,
+        "date": "2026-05-16"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-05-17"
+      },
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-05-08"
+      },
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-05-03"
+      }
+    ]
+  },
+  {
+    "pid": "P007",
+    "name": "Zahid Sheikh",
+    "phone": "+92-300-8106382",
+    "service_categories": [
+      "mechanics"
+    ],
+    "specializations": [
+      "efi_scanning",
+      "suspension_repair"
+    ],
+    "experience_years": 7,
+    "rating": 4.43,
+    "rating_count": 260,
+    "on_time_score": 0.84,
+    "cancellation_rate": 0.08,
+    "base_rate_pkr": 1100,
+    "per_km_rate": 40,
+    "location": {
+      "area": "G-10",
+      "lat": 33.67978,
+      "lng": 73.02752
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.12,
+    "recent_reviews": [
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-05-15"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-05-12"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-04-22"
+      },
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-04-20"
+      }
+    ]
+  },
+  {
+    "pid": "P008",
+    "name": "Kamran Begum",
+    "phone": "+92-300-1922598",
+    "service_categories": [
+      "beauty"
+    ],
+    "specializations": [
+      "henna_art",
+      "threading_facial",
+      "bridal_makeup"
+    ],
+    "experience_years": 14,
+    "rating": 4.58,
+    "rating_count": 15,
+    "on_time_score": 0.96,
+    "cancellation_rate": 0.03,
+    "base_rate_pkr": 1300,
+    "per_km_rate": 45,
+    "location": {
+      "area": "H-13",
+      "lat": 33.62604,
+      "lng": 72.96361
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.13,
+    "recent_reviews": [
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-04-26"
+      },
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-05-07"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-05-16"
+      }
+    ]
+  },
+  {
+    "pid": "P009",
+    "name": "Ayesha Siddiqui",
+    "phone": "+92-300-9237984",
+    "service_categories": [
+      "ac_repair"
+    ],
+    "specializations": [
+      "gas_refill",
+      "inverter_ac",
+      "compressor_fixing"
+    ],
+    "experience_years": 5,
+    "rating": 4.17,
+    "rating_count": 294,
+    "on_time_score": 0.8,
+    "cancellation_rate": 0.06,
+    "base_rate_pkr": 600,
+    "per_km_rate": 40,
+    "location": {
+      "area": "F-11",
+      "lat": 33.68829,
+      "lng": 72.99126
+    },
+    "availability_slots": [
+      "2026-05-18T11:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.12,
+    "recent_reviews": [
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-05-12"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-05-13"
+      },
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-04-28"
+      },
+      {
+        "text": "Kaam tou theek tha, lekin thora late aaye.",
+        "rating": 3,
+        "date": "2026-05-06"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-05-03"
+      }
+    ]
+  },
+  {
+    "pid": "P010",
+    "name": "Tariq Sheikh",
+    "phone": "+92-300-3231049",
+    "service_categories": [
+      "general_home",
+      "ac_repair"
+    ],
+    "specializations": [
+      "wall_painting",
+      "pest_control"
+    ],
+    "experience_years": 3,
+    "rating": 3.09,
+    "rating_count": 151,
+    "on_time_score": 0.94,
+    "cancellation_rate": 0.01,
+    "base_rate_pkr": 800,
+    "per_km_rate": 30,
+    "location": {
+      "area": "G-9",
+      "lat": 33.69199,
+      "lng": 73.03585
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.17,
+    "recent_reviews": [
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-05-11"
+      },
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-05-15"
+      },
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-04-20"
+      },
+      {
+        "text": "Bahut mahir karigar hain. Highly professional team.",
+        "rating": 5,
+        "date": "2026-05-05"
+      }
+    ]
+  },
+  {
+    "pid": "P011",
+    "name": "Arsalan Malik",
+    "phone": "+92-300-4959232",
+    "service_categories": [
+      "driving"
+    ],
+    "specializations": [
+      "intercity_trips",
+      "chaffeur_service"
+    ],
+    "experience_years": 13,
+    "rating": 4.33,
+    "rating_count": 221,
+    "on_time_score": 0.94,
+    "cancellation_rate": 0.07,
+    "base_rate_pkr": 1100,
+    "per_km_rate": 50,
+    "location": {
+      "area": "H-13",
+      "lat": 33.6314,
+      "lng": 72.96189
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.1,
+    "recent_reviews": [
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-04-22"
+      },
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-05-02"
+      }
+    ]
+  },
+  {
+    "pid": "P012",
+    "name": "Yasmin Javed",
+    "phone": "+92-300-7156925",
+    "service_categories": [
+      "plumbing"
+    ],
+    "specializations": [
+      "leak_detection",
+      "pipe_fitting",
+      "geyser_repair"
+    ],
+    "experience_years": 8,
+    "rating": 4.22,
+    "rating_count": 61,
+    "on_time_score": 0.94,
+    "cancellation_rate": 0.1,
+    "base_rate_pkr": 550,
+    "per_km_rate": 30,
+    "location": {
+      "area": "G-9",
+      "lat": 33.6829,
+      "lng": 73.04543
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.12,
+    "recent_reviews": [
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-05-07"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-04-26"
+      }
+    ]
+  },
+  {
+    "pid": "P013",
+    "name": "Asif Lodhi",
+    "phone": "+92-300-4786399",
+    "service_categories": [
+      "plumbing"
+    ],
+    "specializations": [
+      "drain_cleaning",
+      "leak_detection",
+      "pipe_fitting"
+    ],
+    "experience_years": 9,
+    "rating": 4.25,
+    "rating_count": 299,
+    "on_time_score": 0.82,
+    "cancellation_rate": 0.01,
+    "base_rate_pkr": 650,
+    "per_km_rate": 30,
+    "location": {
+      "area": "G-9",
+      "lat": 33.68803,
+      "lng": 73.03678
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.03,
+    "recent_reviews": [
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-05-04"
+      },
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-05-11"
+      },
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-05-12"
+      }
+    ]
+  },
+  {
+    "pid": "P014",
+    "name": "Hassan Dar",
+    "phone": "+92-300-8001211",
+    "service_categories": [
+      "general_home",
+      "tutoring"
+    ],
+    "specializations": [
+      "sofa_cleaning",
+      "wall_painting"
+    ],
+    "experience_years": 3,
+    "rating": 4.68,
+    "rating_count": 137,
+    "on_time_score": 0.86,
+    "cancellation_rate": 0.01,
+    "base_rate_pkr": 800,
+    "per_km_rate": 30,
+    "location": {
+      "area": "G-9",
+      "lat": 33.6891,
+      "lng": 73.03986
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": false,
+    "risk_score": 0.05,
+    "recent_reviews": [
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-05-14"
+      },
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-04-30"
+      },
+      {
+        "text": "Bahut mahir karigar hain. Highly professional team.",
+        "rating": 5,
+        "date": "2026-05-15"
+      },
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-04-19"
+      }
+    ]
+  },
+  {
+    "pid": "P015",
+    "name": "Waqas Abbasi",
+    "phone": "+92-300-4672350",
+    "service_categories": [
+      "general_home"
+    ],
+    "specializations": [
+      "sofa_cleaning",
+      "woodworking"
+    ],
+    "experience_years": 9,
+    "rating": 4.47,
+    "rating_count": 115,
+    "on_time_score": 0.77,
+    "cancellation_rate": 0.12,
+    "base_rate_pkr": 1150,
+    "per_km_rate": 30,
+    "location": {
+      "area": "H-13",
+      "lat": 33.63874,
+      "lng": 72.95877
+    },
+    "availability_slots": [
+      "2026-05-18T11:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.1,
+    "recent_reviews": [
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-05-13"
+      },
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-04-28"
+      }
+    ]
+  },
+  {
+    "pid": "P016",
+    "name": "Bilal Ali",
+    "phone": "+92-300-3545059",
+    "service_categories": [
+      "tutoring"
+    ],
+    "specializations": [
+      "fsc_physics",
+      "matric_maths"
+    ],
+    "experience_years": 6,
+    "rating": 2.83,
+    "rating_count": 32,
+    "on_time_score": 0.93,
+    "cancellation_rate": 0.11,
+    "base_rate_pkr": 950,
+    "per_km_rate": 20,
+    "location": {
+      "area": "G-9",
+      "lat": 33.67794,
+      "lng": 73.03589
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T14:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.15,
+    "recent_reviews": [
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-04-20"
+      },
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-04-19"
+      },
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-04-25"
+      }
+    ]
+  },
+  {
+    "pid": "P017",
+    "name": "Yasmin Lodhi",
+    "phone": "+92-300-4620152",
+    "service_categories": [
+      "beauty"
+    ],
+    "specializations": [
+      "henna_art"
+    ],
+    "experience_years": 10,
+    "rating": 4.88,
+    "rating_count": 277,
+    "on_time_score": 0.88,
+    "cancellation_rate": 0.12,
+    "base_rate_pkr": 2450,
+    "per_km_rate": 45,
+    "location": {
+      "area": "F-11",
+      "lat": 33.67901,
+      "lng": 72.99384
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.19,
+    "recent_reviews": [
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-04-19"
+      },
+      {
+        "text": "Bahut mahir karigar hain. Highly professional team.",
+        "rating": 5,
+        "date": "2026-04-29"
+      },
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-05-14"
+      },
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-05-04"
+      }
+    ]
+  },
+  {
+    "pid": "P018",
+    "name": "Sajid Shah",
+    "phone": "+92-300-1798596",
+    "service_categories": [
+      "electrical"
+    ],
+    "specializations": [
+      "ups_installation",
+      "wiring_checks",
+      "short_circuit_fixing"
+    ],
+    "experience_years": 13,
+    "rating": 4.94,
+    "rating_count": 296,
+    "on_time_score": 0.89,
+    "cancellation_rate": 0.02,
+    "base_rate_pkr": 750,
+    "per_km_rate": 35,
+    "location": {
+      "area": "E-11",
+      "lat": 33.69584,
+      "lng": 72.97929
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.01,
+    "recent_reviews": [
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-04-21"
+      },
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-05-09"
+      },
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-05-09"
+      },
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-05-03"
+      }
+    ]
+  },
+  {
+    "pid": "P019",
+    "name": "Faisal Qureshi",
+    "phone": "+92-300-7148567",
+    "service_categories": [
+      "electrical",
+      "plumbing"
+    ],
+    "specializations": [
+      "generator_servicing"
+    ],
+    "experience_years": 2,
+    "rating": 4.63,
+    "rating_count": 31,
+    "on_time_score": 0.9,
+    "cancellation_rate": 0.09,
+    "base_rate_pkr": 800,
+    "per_km_rate": 35,
+    "location": {
+      "area": "E-11",
+      "lat": 33.69832,
+      "lng": 72.99051
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.07,
+    "recent_reviews": [
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-04-21"
+      },
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-04-18"
+      },
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-04-29"
+      }
+    ]
+  },
+  {
+    "pid": "P020",
+    "name": "Muhammad Shah",
+    "phone": "+92-300-2094617",
+    "service_categories": [
+      "ac_repair"
+    ],
+    "specializations": [
+      "compressor_fixing",
+      "inverter_ac",
+      "gas_refill"
+    ],
+    "experience_years": 6,
+    "rating": 4.71,
+    "rating_count": 198,
+    "on_time_score": 0.91,
+    "cancellation_rate": 0.04,
+    "base_rate_pkr": 850,
+    "per_km_rate": 40,
+    "location": {
+      "area": "F-10",
+      "lat": 33.70017,
+      "lng": 73.02075
+    },
+    "availability_slots": [
+      "2026-05-18T11:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.16,
+    "recent_reviews": [
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-05-15"
+      },
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-05-15"
+      }
+    ]
+  },
+  {
+    "pid": "P021",
+    "name": "Sajid Bibi",
+    "phone": "+92-300-9228764",
+    "service_categories": [
+      "ac_repair"
+    ],
+    "specializations": [
+      "inverter_ac"
+    ],
+    "experience_years": 15,
+    "rating": 4.52,
+    "rating_count": 237,
+    "on_time_score": 0.92,
+    "cancellation_rate": 0.01,
+    "base_rate_pkr": 850,
+    "per_km_rate": 40,
+    "location": {
+      "area": "F-11",
+      "lat": 33.69056,
+      "lng": 72.99698
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.14,
+    "recent_reviews": [
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-04-25"
+      },
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-05-06"
+      }
+    ]
+  },
+  {
+    "pid": "P022",
+    "name": "Tariq Ali",
+    "phone": "+92-300-8537103",
+    "service_categories": [
+      "general_home"
+    ],
+    "specializations": [
+      "wall_painting",
+      "woodworking",
+      "sofa_cleaning"
+    ],
+    "experience_years": 3,
+    "rating": 4.25,
+    "rating_count": 46,
+    "on_time_score": 0.93,
+    "cancellation_rate": 0.09,
+    "base_rate_pkr": 1000,
+    "per_km_rate": 30,
+    "location": {
+      "area": "I-8",
+      "lat": 33.65207,
+      "lng": 73.0815
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-20T09:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.17,
+    "recent_reviews": [
+      {
+        "text": "Bahut mahir karigar hain. Highly professional team.",
+        "rating": 5,
+        "date": "2026-05-09"
+      },
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-04-30"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-05-16"
+      },
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-04-26"
+      }
+    ]
+  },
+  {
+    "pid": "P023",
+    "name": "Bilal Mughal",
+    "phone": "+92-300-8523748",
+    "service_categories": [
+      "tutoring"
+    ],
+    "specializations": [
+      "matric_maths"
+    ],
+    "experience_years": 7,
+    "rating": 4.6,
+    "rating_count": 291,
+    "on_time_score": 0.77,
+    "cancellation_rate": 0.11,
+    "base_rate_pkr": 1200,
+    "per_km_rate": 20,
+    "location": {
+      "area": "F-11",
+      "lat": 33.68965,
+      "lng": 72.99016
+    },
+    "availability_slots": [
+      "2026-05-18T11:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.17,
+    "recent_reviews": [
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-05-14"
+      },
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-05-04"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-05-09"
+      }
+    ]
+  },
+  {
+    "pid": "P024",
+    "name": "Muhammad Bibi",
+    "phone": "+92-300-1050582",
+    "service_categories": [
+      "plumbing"
+    ],
+    "specializations": [
+      "pipe_fitting"
+    ],
+    "experience_years": 5,
+    "rating": 4.18,
+    "rating_count": 243,
+    "on_time_score": 0.9,
+    "cancellation_rate": 0.09,
+    "base_rate_pkr": 650,
+    "per_km_rate": 30,
+    "location": {
+      "area": "G-13",
+      "lat": 33.6509,
+      "lng": 72.9782
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.19,
+    "recent_reviews": [
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-05-15"
+      },
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-05-03"
+      },
+      {
+        "text": "Bahut mahir karigar hain. Highly professional team.",
+        "rating": 5,
+        "date": "2026-04-26"
+      },
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-05-03"
+      }
+    ]
+  },
+  {
+    "pid": "P025",
+    "name": "Hassan Sheikh",
+    "phone": "+92-300-5032232",
+    "service_categories": [
+      "driving",
+      "beauty"
+    ],
+    "specializations": [
+      "chaffeur_service"
+    ],
+    "experience_years": 14,
+    "rating": 4.44,
+    "rating_count": 218,
+    "on_time_score": 0.99,
+    "cancellation_rate": 0.08,
+    "base_rate_pkr": 950,
+    "per_km_rate": 50,
+    "location": {
+      "area": "F-10",
+      "lat": 33.6873,
+      "lng": 73.01178
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.08,
+    "recent_reviews": [
+      {
+        "text": "Kaam tou theek tha, lekin thora late aaye.",
+        "rating": 3,
+        "date": "2026-04-20"
+      },
+      {
+        "text": "Bahut mahir karigar hain. Highly professional team.",
+        "rating": 5,
+        "date": "2026-05-10"
+      }
+    ]
+  },
+  {
+    "pid": "P026",
+    "name": "Tariq Javed",
+    "phone": "+92-300-6019416",
+    "service_categories": [
+      "tutoring",
+      "general_home"
+    ],
+    "specializations": [
+      "secondary_science",
+      "olevel_english",
+      "fsc_physics"
+    ],
+    "experience_years": 1,
+    "rating": 3.62,
+    "rating_count": 157,
+    "on_time_score": 0.78,
+    "cancellation_rate": 0.07,
+    "base_rate_pkr": 1200,
+    "per_km_rate": 20,
+    "location": {
+      "area": "G-11",
+      "lat": 33.6711,
+      "lng": 73.01398
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.04,
+    "recent_reviews": [
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-05-11"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-05-15"
+      },
+      {
+        "text": "Kaam tou theek tha, lekin thora late aaye.",
+        "rating": 3,
+        "date": "2026-05-04"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-05-07"
+      },
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-04-18"
+      }
+    ]
+  },
+  {
+    "pid": "P027",
+    "name": "Hassan Mughal",
+    "phone": "+92-300-8183077",
+    "service_categories": [
+      "ac_repair"
+    ],
+    "specializations": [
+      "inverter_ac"
+    ],
+    "experience_years": 13,
+    "rating": 4.26,
+    "rating_count": 256,
+    "on_time_score": 0.81,
+    "cancellation_rate": 0.07,
+    "base_rate_pkr": 650,
+    "per_km_rate": 40,
+    "location": {
+      "area": "F-11",
+      "lat": 33.6808,
+      "lng": 73.00233
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-20T14:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.0,
+    "recent_reviews": [
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-05-15"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-04-26"
+      },
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-05-06"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-05-14"
+      },
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-04-24"
+      }
+    ]
+  },
+  {
+    "pid": "P028",
+    "name": "Yasmin Lodhi",
+    "phone": "+92-300-6510829",
+    "service_categories": [
+      "mechanics"
+    ],
+    "specializations": [
+      "engine_tuning"
+    ],
+    "experience_years": 14,
+    "rating": 4.77,
+    "rating_count": 27,
+    "on_time_score": 0.76,
+    "cancellation_rate": 0.03,
+    "base_rate_pkr": 1700,
+    "per_km_rate": 40,
+    "location": {
+      "area": "F-11",
+      "lat": 33.68553,
+      "lng": 72.99342
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.15,
+    "recent_reviews": [
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-05-10"
+      },
+      {
+        "text": "Bahut mahir karigar hain. Highly professional team.",
+        "rating": 5,
+        "date": "2026-05-07"
+      },
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-05-05"
+      },
+      {
+        "text": "Bahut mahir karigar hain. Highly professional team.",
+        "rating": 5,
+        "date": "2026-04-21"
+      }
+    ]
+  },
+  {
+    "pid": "P029",
+    "name": "Zeeshan Javed",
+    "phone": "+92-300-3177537",
+    "service_categories": [
+      "electrical"
+    ],
+    "specializations": [
+      "wiring_checks",
+      "short_circuit_fixing",
+      "generator_servicing"
+    ],
+    "experience_years": 10,
+    "rating": 4.47,
+    "rating_count": 120,
+    "on_time_score": 0.91,
+    "cancellation_rate": 0.07,
+    "base_rate_pkr": 800,
+    "per_km_rate": 35,
+    "location": {
+      "area": "I-8",
+      "lat": 33.64771,
+      "lng": 73.07455
+    },
+    "availability_slots": [
+      "2026-05-18T11:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.12,
+    "recent_reviews": [
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-05-14"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-05-12"
+      },
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-05-07"
+      }
+    ]
+  },
+  {
+    "pid": "P030",
+    "name": "Waqas Ali",
+    "phone": "+92-300-5232645",
+    "service_categories": [
+      "beauty"
+    ],
+    "specializations": [
+      "henna_art"
+    ],
+    "experience_years": 9,
+    "rating": 2.83,
+    "rating_count": 223,
+    "on_time_score": 0.94,
+    "cancellation_rate": 0.03,
+    "base_rate_pkr": 1500,
+    "per_km_rate": 45,
+    "location": {
+      "area": "G-10",
+      "lat": 33.67213,
+      "lng": 73.0284
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.09,
+    "recent_reviews": [
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-04-26"
+      },
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-04-19"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-04-25"
+      },
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-05-13"
+      },
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-05-01"
+      }
+    ]
+  },
+  {
+    "pid": "P031",
+    "name": "Muhammad Qureshi",
+    "phone": "+92-300-5782951",
+    "service_categories": [
+      "driving"
+    ],
+    "specializations": [
+      "manual_car"
+    ],
+    "experience_years": 2,
+    "rating": 4.95,
+    "rating_count": 297,
+    "on_time_score": 0.87,
+    "cancellation_rate": 0.07,
+    "base_rate_pkr": 800,
+    "per_km_rate": 50,
+    "location": {
+      "area": "G-9",
+      "lat": 33.68133,
+      "lng": 73.04475
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.14,
+    "recent_reviews": [
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-04-23"
+      },
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-04-28"
+      }
+    ]
+  },
+  {
+    "pid": "P032",
+    "name": "Zeeshan Dar",
+    "phone": "+92-300-4398429",
+    "service_categories": [
+      "tutoring"
+    ],
+    "specializations": [
+      "matric_maths"
+    ],
+    "experience_years": 15,
+    "rating": 4.47,
+    "rating_count": 107,
+    "on_time_score": 0.9,
+    "cancellation_rate": 0.11,
+    "base_rate_pkr": 1300,
+    "per_km_rate": 20,
+    "location": {
+      "area": "E-11",
+      "lat": 33.69599,
+      "lng": 72.99365
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.03,
+    "recent_reviews": [
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-05-13"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-05-03"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-05-15"
+      }
+    ]
+  },
+  {
+    "pid": "P033",
+    "name": "Imran Siddiqui",
+    "phone": "+92-300-8868487",
+    "service_categories": [
+      "mechanics"
+    ],
+    "specializations": [
+      "suspension_repair"
+    ],
+    "experience_years": 1,
+    "rating": 4.32,
+    "rating_count": 86,
+    "on_time_score": 0.76,
+    "cancellation_rate": 0.12,
+    "base_rate_pkr": 1400,
+    "per_km_rate": 40,
+    "location": {
+      "area": "G-13",
+      "lat": 33.6524,
+      "lng": 72.98035
+    },
+    "availability_slots": [
+      "2026-05-18T11:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.09,
+    "recent_reviews": [
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-05-14"
+      },
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-05-05"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-05-14"
+      }
+    ]
+  },
+  {
+    "pid": "P034",
+    "name": "Ayesha Qureshi",
+    "phone": "+92-300-9856118",
+    "service_categories": [
+      "general_home"
+    ],
+    "specializations": [
+      "woodworking",
+      "wall_painting",
+      "pest_control"
+    ],
+    "experience_years": 11,
+    "rating": 4.42,
+    "rating_count": 233,
+    "on_time_score": 0.92,
+    "cancellation_rate": 0.06,
+    "base_rate_pkr": 800,
+    "per_km_rate": 30,
+    "location": {
+      "area": "F-11",
+      "lat": 33.67643,
+      "lng": 72.99851
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.15,
+    "recent_reviews": [
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-04-25"
+      },
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-04-26"
+      },
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-05-16"
+      },
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-04-20"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-04-30"
+      }
+    ]
+  },
+  {
+    "pid": "P035",
+    "name": "Bilal Lodhi",
+    "phone": "+92-300-1477135",
+    "service_categories": [
+      "beauty"
+    ],
+    "specializations": [
+      "henna_art"
+    ],
+    "experience_years": 13,
+    "rating": 4.1,
+    "rating_count": 76,
+    "on_time_score": 0.96,
+    "cancellation_rate": 0.02,
+    "base_rate_pkr": 1500,
+    "per_km_rate": 45,
+    "location": {
+      "area": "F-10",
+      "lat": 33.7002,
+      "lng": 73.01933
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.1,
+    "recent_reviews": [
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-05-07"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-04-19"
+      },
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-05-04"
+      }
+    ]
+  },
+  {
+    "pid": "P036",
+    "name": "Kamran Malik",
+    "phone": "+92-300-5614385",
+    "service_categories": [
+      "electrical"
+    ],
+    "specializations": [
+      "wiring_checks"
+    ],
+    "experience_years": 10,
+    "rating": 3.82,
+    "rating_count": 183,
+    "on_time_score": 0.83,
+    "cancellation_rate": 0.1,
+    "base_rate_pkr": 750,
+    "per_km_rate": 35,
+    "location": {
+      "area": "F-11",
+      "lat": 33.67869,
+      "lng": 72.99714
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-20T09:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.06,
+    "recent_reviews": [
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-04-24"
+      },
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-05-15"
+      },
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-05-05"
+      }
+    ]
+  },
+  {
+    "pid": "P037",
+    "name": "Noman Sheikh",
+    "phone": "+92-300-4616947",
+    "service_categories": [
+      "beauty"
+    ],
+    "specializations": [
+      "hair_styling",
+      "bridal_makeup",
+      "henna_art"
+    ],
+    "experience_years": 7,
+    "rating": 4.44,
+    "rating_count": 26,
+    "on_time_score": 0.89,
+    "cancellation_rate": 0.1,
+    "base_rate_pkr": 1750,
+    "per_km_rate": 45,
+    "location": {
+      "area": "F-10",
+      "lat": 33.68566,
+      "lng": 73.01046
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.19,
+    "recent_reviews": [
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-04-29"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-05-07"
+      },
+      {
+        "text": "Kaam tou theek tha, lekin thora late aaye.",
+        "rating": 3,
+        "date": "2026-05-11"
+      },
+      {
+        "text": "Bahut mahir karigar hain. Highly professional team.",
+        "rating": 5,
+        "date": "2026-05-03"
+      }
+    ]
+  },
+  {
+    "pid": "P038",
+    "name": "Noman Chaudhry",
+    "phone": "+92-300-7836361",
+    "service_categories": [
+      "driving",
+      "plumbing"
+    ],
+    "specializations": [
+      "intercity_trips",
+      "automatic_sedan"
+    ],
+    "experience_years": 1,
+    "rating": 4.97,
+    "rating_count": 117,
+    "on_time_score": 0.86,
+    "cancellation_rate": 0.07,
+    "base_rate_pkr": 600,
+    "per_km_rate": 50,
+    "location": {
+      "area": "F-11",
+      "lat": 33.67791,
+      "lng": 73.0059
+    },
+    "availability_slots": [
+      "2026-05-18T14:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.1,
+    "recent_reviews": [
+      {
+        "text": "Bahut mahir karigar hain. Highly professional team.",
+        "rating": 5,
+        "date": "2026-04-25"
+      },
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-05-14"
+      }
+    ]
+  },
+  {
+    "pid": "P039",
+    "name": "Sajid Dar",
+    "phone": "+92-300-7245877",
+    "service_categories": [
+      "general_home"
+    ],
+    "specializations": [
+      "wall_painting"
+    ],
+    "experience_years": 9,
+    "rating": 4.8,
+    "rating_count": 258,
+    "on_time_score": 0.92,
+    "cancellation_rate": 0.11,
+    "base_rate_pkr": 500,
+    "per_km_rate": 30,
+    "location": {
+      "area": "F-11",
+      "lat": 33.68838,
+      "lng": 72.99454
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-20T09:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.15,
+    "recent_reviews": [
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-04-28"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-04-18"
+      },
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-04-18"
+      }
+    ]
+  },
+  {
+    "pid": "P040",
+    "name": "Zeeshan Begum",
+    "phone": "+92-300-8234031",
+    "service_categories": [
+      "plumbing"
+    ],
+    "specializations": [
+      "drain_cleaning",
+      "geyser_repair",
+      "leak_detection"
+    ],
+    "experience_years": 12,
+    "rating": 4.46,
+    "rating_count": 66,
+    "on_time_score": 0.87,
+    "cancellation_rate": 0.11,
+    "base_rate_pkr": 500,
+    "per_km_rate": 30,
+    "location": {
+      "area": "F-10",
+      "lat": 33.69511,
+      "lng": 73.02196
+    },
+    "availability_slots": [
+      "2026-05-18T14:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.08,
+    "recent_reviews": [
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-04-28"
+      },
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-04-26"
+      },
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-05-16"
+      }
+    ]
+  },
+  {
+    "pid": "P041",
+    "name": "Yasmin Khan",
+    "phone": "+92-300-5532474",
+    "service_categories": [
+      "plumbing"
+    ],
+    "specializations": [
+      "geyser_repair"
+    ],
+    "experience_years": 1,
+    "rating": 4.39,
+    "rating_count": 292,
+    "on_time_score": 0.89,
+    "cancellation_rate": 0.03,
+    "base_rate_pkr": 550,
+    "per_km_rate": 30,
+    "location": {
+      "area": "G-13",
+      "lat": 33.64537,
+      "lng": 72.9727
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T14:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.17,
+    "recent_reviews": [
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-05-04"
+      },
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-05-15"
+      },
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-04-23"
+      },
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-05-08"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-05-14"
+      }
+    ]
+  },
+  {
+    "pid": "P042",
+    "name": "Waqas Sheikh",
+    "phone": "+92-300-3928454",
+    "service_categories": [
+      "plumbing"
+    ],
+    "specializations": [
+      "pipe_fitting",
+      "drain_cleaning"
+    ],
+    "experience_years": 7,
+    "rating": 4.39,
+    "rating_count": 217,
+    "on_time_score": 0.92,
+    "cancellation_rate": 0.09,
+    "base_rate_pkr": 750,
+    "per_km_rate": 30,
+    "location": {
+      "area": "G-11",
+      "lat": 33.65887,
+      "lng": 73.01684
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.17,
+    "recent_reviews": [
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-05-02"
+      },
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-05-07"
+      },
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-05-14"
+      }
+    ]
+  },
+  {
+    "pid": "P043",
+    "name": "Sajid Malik",
+    "phone": "+92-300-3695683",
+    "service_categories": [
+      "general_home",
+      "beauty"
+    ],
+    "specializations": [
+      "sofa_cleaning"
+    ],
+    "experience_years": 5,
+    "rating": 4.73,
+    "rating_count": 249,
+    "on_time_score": 0.94,
+    "cancellation_rate": 0.07,
+    "base_rate_pkr": 1000,
+    "per_km_rate": 30,
+    "location": {
+      "area": "F-10",
+      "lat": 33.69041,
+      "lng": 73.01422
+    },
+    "availability_slots": [
+      "2026-05-18T11:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": false,
+    "risk_score": 0.05,
+    "recent_reviews": [
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-05-14"
+      },
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-05-08"
+      }
+    ]
+  },
+  {
+    "pid": "P044",
+    "name": "Zahid Javed",
+    "phone": "+92-300-6513689",
+    "service_categories": [
+      "mechanics",
+      "plumbing"
+    ],
+    "specializations": [
+      "engine_tuning"
+    ],
+    "experience_years": 5,
+    "rating": 4.92,
+    "rating_count": 234,
+    "on_time_score": 0.94,
+    "cancellation_rate": 0.05,
+    "base_rate_pkr": 1050,
+    "per_km_rate": 40,
+    "location": {
+      "area": "G-9",
+      "lat": 33.68763,
+      "lng": 73.04441
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.16,
+    "recent_reviews": [
+      {
+        "text": "Kaam tou theek tha, lekin thora late aaye.",
+        "rating": 3,
+        "date": "2026-05-11"
+      },
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-05-08"
+      },
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-04-30"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-05-14"
+      }
+    ]
+  },
+  {
+    "pid": "P045",
+    "name": "Raza Mahmood",
+    "phone": "+92-300-4379499",
+    "service_categories": [
+      "tutoring"
+    ],
+    "specializations": [
+      "secondary_science"
+    ],
+    "experience_years": 5,
+    "rating": 4.08,
+    "rating_count": 196,
+    "on_time_score": 0.82,
+    "cancellation_rate": 0.09,
+    "base_rate_pkr": 1300,
+    "per_km_rate": 20,
+    "location": {
+      "area": "E-11",
+      "lat": 33.70225,
+      "lng": 72.97861
+    },
+    "availability_slots": [
+      "2026-05-18T14:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.08,
+    "recent_reviews": [
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-04-18"
+      },
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-05-10"
+      }
+    ]
+  },
+  {
+    "pid": "P046",
+    "name": "Adnan Bibi",
+    "phone": "+92-300-3054723",
+    "service_categories": [
+      "driving"
+    ],
+    "specializations": [
+      "chaffeur_service",
+      "manual_car"
+    ],
+    "experience_years": 11,
+    "rating": 4.44,
+    "rating_count": 117,
+    "on_time_score": 0.79,
+    "cancellation_rate": 0.08,
+    "base_rate_pkr": 650,
+    "per_km_rate": 50,
+    "location": {
+      "area": "I-8",
+      "lat": 33.65929,
+      "lng": 73.06956
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.14,
+    "recent_reviews": [
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-04-26"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-04-26"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-04-26"
+      },
+      {
+        "text": "Kaam tou theek tha, lekin thora late aaye.",
+        "rating": 3,
+        "date": "2026-05-01"
+      }
+    ]
+  },
+  {
+    "pid": "P047",
+    "name": "Hassan Javed",
+    "phone": "+92-300-2549844",
+    "service_categories": [
+      "beauty"
+    ],
+    "specializations": [
+      "hair_styling",
+      "bridal_makeup",
+      "threading_facial"
+    ],
+    "experience_years": 9,
+    "rating": 4.36,
+    "rating_count": 80,
+    "on_time_score": 0.93,
+    "cancellation_rate": 0.03,
+    "base_rate_pkr": 2400,
+    "per_km_rate": 45,
+    "location": {
+      "area": "G-13",
+      "lat": 33.64131,
+      "lng": 72.97504
+    },
+    "availability_slots": [
+      "2026-05-18T11:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.11,
+    "recent_reviews": [
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-05-05"
+      },
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-04-26"
+      },
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-05-15"
+      },
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-04-22"
+      },
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-04-25"
+      }
+    ]
+  },
+  {
+    "pid": "P048",
+    "name": "Hassan Shah",
+    "phone": "+92-300-3178136",
+    "service_categories": [
+      "tutoring"
+    ],
+    "specializations": [
+      "olevel_english",
+      "matric_maths",
+      "secondary_science"
+    ],
+    "experience_years": 10,
+    "rating": 4.62,
+    "rating_count": 288,
+    "on_time_score": 0.83,
+    "cancellation_rate": 0.08,
+    "base_rate_pkr": 1450,
+    "per_km_rate": 20,
+    "location": {
+      "area": "I-8",
+      "lat": 33.65999,
+      "lng": 73.07703
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.18,
+    "recent_reviews": [
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-04-25"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-04-22"
+      }
+    ]
+  },
+  {
+    "pid": "P049",
+    "name": "Zahid Shah",
+    "phone": "+92-300-4959135",
+    "service_categories": [
+      "tutoring",
+      "beauty"
+    ],
+    "specializations": [
+      "secondary_science"
+    ],
+    "experience_years": 15,
+    "rating": 4.26,
+    "rating_count": 286,
+    "on_time_score": 0.79,
+    "cancellation_rate": 0.07,
+    "base_rate_pkr": 1400,
+    "per_km_rate": 20,
+    "location": {
+      "area": "F-10",
+      "lat": 33.6939,
+      "lng": 73.01826
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T14:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.17,
+    "recent_reviews": [
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-04-22"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-04-25"
+      },
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-05-10"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-04-26"
+      },
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-04-26"
+      }
+    ]
+  },
+  {
+    "pid": "P050",
+    "name": "Raza Ali",
+    "phone": "+92-300-4336547",
+    "service_categories": [
+      "general_home",
+      "beauty"
+    ],
+    "specializations": [
+      "wall_painting",
+      "sofa_cleaning"
+    ],
+    "experience_years": 7,
+    "rating": 4.09,
+    "rating_count": 229,
+    "on_time_score": 0.79,
+    "cancellation_rate": 0.11,
+    "base_rate_pkr": 600,
+    "per_km_rate": 30,
+    "location": {
+      "area": "F-11",
+      "lat": 33.68962,
+      "lng": 72.9987
+    },
+    "availability_slots": [
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.08,
+    "recent_reviews": [
+      {
+        "text": "Kaam tou theek tha, lekin thora late aaye.",
+        "rating": 3,
+        "date": "2026-05-12"
+      },
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-04-20"
+      },
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-05-11"
+      },
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-05-09"
+      },
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-05-17"
+      }
+    ]
+  },
+  {
+    "pid": "P051",
+    "name": "Yasmin Abbasi",
+    "phone": "+92-300-9353010",
+    "service_categories": [
+      "mechanics"
+    ],
+    "specializations": [
+      "brake_servicing"
+    ],
+    "experience_years": 2,
+    "rating": 4.68,
+    "rating_count": 53,
+    "on_time_score": 0.86,
+    "cancellation_rate": 0.11,
+    "base_rate_pkr": 1350,
+    "per_km_rate": 40,
+    "location": {
+      "area": "H-13",
+      "lat": 33.63073,
+      "lng": 72.96342
+    },
+    "availability_slots": [
+      "2026-05-18T14:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T14:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.14,
+    "recent_reviews": [
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-05-17"
+      },
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-05-08"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-04-18"
+      }
+    ]
+  },
+  {
+    "pid": "P052",
+    "name": "Faisal Shah",
+    "phone": "+92-300-6078286",
+    "service_categories": [
+      "tutoring"
+    ],
+    "specializations": [
+      "secondary_science",
+      "fsc_physics"
+    ],
+    "experience_years": 14,
+    "rating": 4.89,
+    "rating_count": 290,
+    "on_time_score": 0.98,
+    "cancellation_rate": 0.07,
+    "base_rate_pkr": 950,
+    "per_km_rate": 20,
+    "location": {
+      "area": "E-11",
+      "lat": 33.69604,
+      "lng": 72.99367
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.02,
+    "recent_reviews": [
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-05-12"
+      },
+      {
+        "text": "Kaam tou theek tha, lekin thora late aaye.",
+        "rating": 3,
+        "date": "2026-05-14"
+      },
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-05-06"
+      },
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-05-08"
+      }
+    ]
+  },
+  {
+    "pid": "P053",
+    "name": "Zeeshan Lodhi",
+    "phone": "+92-300-3299202",
+    "service_categories": [
+      "driving"
+    ],
+    "specializations": [
+      "chaffeur_service",
+      "intercity_trips",
+      "automatic_sedan"
+    ],
+    "experience_years": 8,
+    "rating": 4.16,
+    "rating_count": 277,
+    "on_time_score": 0.9,
+    "cancellation_rate": 0.07,
+    "base_rate_pkr": 1100,
+    "per_km_rate": 50,
+    "location": {
+      "area": "G-13",
+      "lat": 33.65558,
+      "lng": 72.97273
+    },
+    "availability_slots": [
+      "2026-05-18T11:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.19,
+    "recent_reviews": [
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-04-28"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-04-28"
+      },
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-04-18"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-05-15"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-05-13"
+      }
+    ]
+  },
+  {
+    "pid": "P054",
+    "name": "Ayesha Siddiqui",
+    "phone": "+92-300-9783377",
+    "service_categories": [
+      "mechanics",
+      "plumbing"
+    ],
+    "specializations": [
+      "efi_scanning",
+      "brake_servicing"
+    ],
+    "experience_years": 10,
+    "rating": 4.13,
+    "rating_count": 247,
+    "on_time_score": 0.88,
+    "cancellation_rate": 0.04,
+    "base_rate_pkr": 1150,
+    "per_km_rate": 40,
+    "location": {
+      "area": "G-10",
+      "lat": 33.67812,
+      "lng": 73.02979
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": false,
+    "risk_score": 0.09,
+    "recent_reviews": [
+      {
+        "text": "Bahut mahir karigar hain. Highly professional team.",
+        "rating": 5,
+        "date": "2026-04-30"
+      },
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-04-27"
+      },
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-04-29"
+      },
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-05-05"
+      }
+    ]
+  },
+  {
+    "pid": "P055",
+    "name": "Kamran Mughal",
+    "phone": "+92-300-3618948",
+    "service_categories": [
+      "electrical"
+    ],
+    "specializations": [
+      "ups_installation",
+      "short_circuit_fixing",
+      "generator_servicing"
+    ],
+    "experience_years": 5,
+    "rating": 3.04,
+    "rating_count": 285,
+    "on_time_score": 0.97,
+    "cancellation_rate": 0.09,
+    "base_rate_pkr": 650,
+    "per_km_rate": 35,
+    "location": {
+      "area": "I-8",
+      "lat": 33.64716,
+      "lng": 73.07203
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.13,
+    "recent_reviews": [
+      {
+        "text": "Bahut mahir karigar hain. Highly professional team.",
+        "rating": 5,
+        "date": "2026-05-11"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-05-02"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-04-27"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-04-24"
+      }
+    ]
+  },
+  {
+    "pid": "P056",
+    "name": "Zeeshan Riaz",
+    "phone": "+92-300-5840781",
+    "service_categories": [
+      "mechanics"
+    ],
+    "specializations": [
+      "efi_scanning",
+      "engine_tuning"
+    ],
+    "experience_years": 9,
+    "rating": 4.63,
+    "rating_count": 257,
+    "on_time_score": 0.77,
+    "cancellation_rate": 0.08,
+    "base_rate_pkr": 1250,
+    "per_km_rate": 40,
+    "location": {
+      "area": "G-13",
+      "lat": 33.65364,
+      "lng": 72.96813
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.2,
+    "recent_reviews": [
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-04-27"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-04-24"
+      },
+      {
+        "text": "Satisfied with the service. Fair price and neat job.",
+        "rating": 4,
+        "date": "2026-04-30"
+      }
+    ]
+  },
+  {
+    "pid": "P057",
+    "name": "Hassan Abbasi",
+    "phone": "+92-300-9612817",
+    "service_categories": [
+      "plumbing"
+    ],
+    "specializations": [
+      "leak_detection",
+      "drain_cleaning"
+    ],
+    "experience_years": 1,
+    "rating": 4.31,
+    "rating_count": 234,
+    "on_time_score": 0.85,
+    "cancellation_rate": 0.11,
+    "base_rate_pkr": 400,
+    "per_km_rate": 30,
+    "location": {
+      "area": "G-10",
+      "lat": 33.67792,
+      "lng": 73.02876
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.08,
+    "recent_reviews": [
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-05-11"
+      },
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-05-01"
+      }
+    ]
+  },
+  {
+    "pid": "P058",
+    "name": "Farhan Riaz",
+    "phone": "+92-300-4940913",
+    "service_categories": [
+      "beauty"
+    ],
+    "specializations": [
+      "bridal_makeup"
+    ],
+    "experience_years": 2,
+    "rating": 3.27,
+    "rating_count": 202,
+    "on_time_score": 0.77,
+    "cancellation_rate": 0.03,
+    "base_rate_pkr": 1600,
+    "per_km_rate": 45,
+    "location": {
+      "area": "G-11",
+      "lat": 33.65983,
+      "lng": 73.0055
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.08,
+    "recent_reviews": [
+      {
+        "text": "Acha behave tha, overall badhiya experience raha.",
+        "rating": 5,
+        "date": "2026-05-03"
+      },
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-05-17"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-04-29"
+      },
+      {
+        "text": "Double bookings problem. Kept me waiting for 2 hours.",
+        "rating": 2,
+        "date": "2026-05-01"
+      },
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-05-01"
+      }
+    ]
+  },
+  {
+    "pid": "P059",
+    "name": "Noman Khan",
+    "phone": "+92-300-2267628",
+    "service_categories": [
+      "tutoring"
+    ],
+    "specializations": [
+      "secondary_science"
+    ],
+    "experience_years": 7,
+    "rating": 4.79,
+    "rating_count": 222,
+    "on_time_score": 0.82,
+    "cancellation_rate": 0.06,
+    "base_rate_pkr": 1150,
+    "per_km_rate": 20,
+    "location": {
+      "area": "G-13",
+      "lat": 33.64567,
+      "lng": 72.97983
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T11:00:00",
+      "2026-05-19T14:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T14:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.06,
+    "recent_reviews": [
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-05-17"
+      },
+      {
+        "text": "Best technician in G-13. Extremely skilled.",
+        "rating": 5,
+        "date": "2026-05-08"
+      },
+      {
+        "text": "Cheated me on material cost. Price was too high.",
+        "rating": 2,
+        "date": "2026-04-19"
+      },
+      {
+        "text": "Kaam tou theek tha, lekin thora late aaye.",
+        "rating": 3,
+        "date": "2026-04-28"
+      }
+    ]
+  },
+  {
+    "pid": "P060",
+    "name": "Noman Qureshi",
+    "phone": "+92-300-4915646",
+    "service_categories": [
+      "mechanics"
+    ],
+    "specializations": [
+      "suspension_repair"
+    ],
+    "experience_years": 14,
+    "rating": 4.08,
+    "rating_count": 87,
+    "on_time_score": 0.97,
+    "cancellation_rate": 0.03,
+    "base_rate_pkr": 900,
+    "per_km_rate": 40,
+    "location": {
+      "area": "G-11",
+      "lat": 33.66494,
+      "lng": 73.0156
+    },
+    "availability_slots": [
+      "2026-05-18T09:00:00",
+      "2026-05-18T11:00:00",
+      "2026-05-18T14:00:00",
+      "2026-05-18T16:00:00",
+      "2026-05-19T09:00:00",
+      "2026-05-19T16:00:00",
+      "2026-05-20T09:00:00",
+      "2026-05-20T11:00:00",
+      "2026-05-20T16:00:00"
+    ],
+    "verified": true,
+    "risk_score": 0.07,
+    "recent_reviews": [
+      {
+        "text": "UPS was fixed in 15 mins. Clean work.",
+        "rating": 5,
+        "date": "2026-05-05"
+      },
+      {
+        "text": "Bahut mahir karigar hain. Highly professional team.",
+        "rating": 5,
+        "date": "2026-04-20"
+      },
+      {
+        "text": "Bohat acha kaam kiya. Waqt per aaye aur boht professional thay.",
+        "rating": 5,
+        "date": "2026-04-25"
+      },
+      {
+        "text": "Highly recommended! Inverter issue successfully resolved.",
+        "rating": 5,
+        "date": "2026-05-10"
+      }
+    ]
+  }
+]
