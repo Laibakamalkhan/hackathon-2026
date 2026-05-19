@@ -25,15 +25,14 @@ def init_firebase():
                 logger.info(f"Initializing Firebase Admin with Service Account at: {resolved_path}")
                 cred = credentials.Certificate(str(resolved_path))
                 firebase_admin.initialize_app(cred)
+                db = firestore.client()
+                logger.info("Firebase Admin and Firestore client initialized successfully.")
             else:
-                logger.warning(f"Firebase credentials JSON not found at: {resolved_path}. Falling back to default app initialization.")
-                firebase_admin.initialize_app()
-            
-            db = firestore.client()
-            logger.info("Firebase Admin and Firestore client initialized successfully.")
+                logger.info("Firebase credentials JSON not found. Running in Local/Mock mode without Firebase.")
+                db = None
+                
         except Exception as e:
-            logger.error(f"Error initializing Firebase: {e}")
-            raise e
+            logger.info(f"Firebase initialization bypassed: {e}. Running in Local/Mock mode.")
     else:
         db = firestore.client()
     return db

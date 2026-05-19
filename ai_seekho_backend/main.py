@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+import asyncio
 import uuid
 from typing import Dict, Any, List, Optional
 from datetime import datetime
@@ -383,8 +384,34 @@ async def agent_coordinate(req: CoordinateRequest):
             user_lng=req.lng
         )
 
+        # Broadcast initiation
+        await manager.broadcast_to_session(req.session_id, {
+            "event": "orchestration_started",
+            "message": "Initializing AI Seekho Agent Coordinator..."
+        })
+
         coordinator = _get_coordinator()
         result = coordinator.run(state)
+
+        # Broadcast progressive trace events to simulate real-time thought logs
+        for evt in result.get("trace_events", []):
+            evt_type = evt.get("type", "think").upper()
+            evt_content = evt.get("content", "")
+            reasoning_msg = f"[{evt_type}] {evt_content}"
+            
+            await manager.broadcast_to_session(req.session_id, {
+                "event": "step_completed",
+                "step": {
+                    "reasoning": reasoning_msg,
+                    "timestamp": evt.get("timestamp", datetime.now().isoformat())
+                }
+            })
+            await asyncio.sleep(0.4)
+
+        # Broadcast completion
+        await manager.broadcast_to_session(req.session_id, {
+            "event": "orchestration_completed"
+        })
 
         # Write trace to Firestore
         trace_id = f"COORD-{uuid.uuid4().hex[:8].upper()}"

@@ -140,11 +140,11 @@ class TestAISeekhoBackend(unittest.TestCase):
         ]
         
         # Test Case 1: Slot matches general availability (within 2 hours of a slot)
-        is_ok, msg = validate_provider_schedule("P001", "2026-05-18T09:30:00", provider_slots)
+        is_ok, msg, next_slot = validate_provider_schedule("P001", "2026-05-18T09:30:00", provider_slots)
         self.assertTrue(is_ok, f"Should be approved as it matches 9:00 AM slot. Reason: {msg}")
         
         # Test Case 2: Slot does NOT match general availability
-        is_ok, msg = validate_provider_schedule("P001", "2026-05-18T11:30:00", provider_slots)
+        is_ok, msg, next_slot = validate_provider_schedule("P001", "2026-05-18T11:30:00", provider_slots)
         self.assertFalse(is_ok, "Should be rejected because 11:30 AM is too far from any slot.")
         
         print("\n[PASS] Scenario 6: Scheduling validation & travel buffer checks verified successfully.")

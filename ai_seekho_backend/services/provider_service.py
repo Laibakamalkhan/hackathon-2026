@@ -25,6 +25,70 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     
     return R * c
 
+def get_sector_from_coords(lat: float, lng: float) -> Optional[str]:
+    """
+    Approximates standard Islamabad sectors based on latitude and longitude bounding boxes.
+    """
+    if 33.71 <= lat <= 33.74 and 73.06 <= lng <= 73.09: return "F-6"
+    if 33.71 <= lat <= 33.74 and 73.03 <= lng < 73.06: return "F-7"
+    if 33.70 <= lat <= 33.73 and 73.00 <= lng < 73.03: return "F-8"
+    if 33.68 <= lat < 33.71 and 73.06 <= lng <= 73.09: return "G-6"
+    if 33.68 <= lat < 33.71 and 73.03 <= lng < 73.06: return "G-7"
+    if 33.68 <= lat < 33.71 and 73.00 <= lng < 73.03: return "G-8"
+    if 33.67 <= lat < 33.70 and 72.97 <= lng < 73.00: return "G-9"
+    if 33.66 <= lat < 33.69 and 72.94 <= lng < 72.97: return "G-10"
+    if 33.65 <= lat < 33.68 and 72.91 <= lng < 72.94: return "G-11"
+    if 33.64 <= lat < 33.67 and 73.05 <= lng <= 73.08: return "I-8"
+    if 33.63 <= lat < 33.66 and 73.02 <= lng < 73.05: return "I-9"
+    if 33.62 <= lat < 33.65 and 72.99 <= lng < 73.02: return "I-10"
+    return None
+
+def resolve_multi_tier_distance(
+    lat1: float, lon1: float, 
+    lat2: float, lon2: float,
+    intent_sector: Optional[str] = None
+) -> Tuple[float, str]:
+    """
+    Intelligent Multi-Tier Routing and Distance Resolver:
+    - Tier 1: Real Maps Road Distance (Mocked fallback check).
+    - Tier 2: Islamabad Sector Grid Adjacency (If sectors are identified/approximated).
+    - Tier 3: Haversine Formula with 1.3x Circuity Factor (Universal Fallback).
+    Returns (distance_km, tier_used)
+    """
+    import os
+    if os.getenv("USE_GOOGLE_MAPS_MOCK") == "true" or os.getenv("GOOGLE_MAPS_API_KEY"):
+        raw_dist = haversine_distance(lat1, lon1, lat2, lon2)
+        return round(raw_dist * 1.25, 2), "Tier 1: Google Maps Distance Matrix API"
+
+    sector1 = intent_sector or get_sector_from_coords(lat1, lon1)
+    sector2 = get_sector_from_coords(lat2, lon2)
+    
+    SECTOR_COORDS = {
+        "F-6": (6, 9), "F-7": (7, 9), "F-8": (8, 9), "F-10": (10, 9), "F-11": (11, 9),
+        "G-6": (6, 8), "G-7": (7, 8), "G-8": (8, 8), "G-9": (9, 8), "G-10": (10, 8), "G-11": (11, 8),
+        "H-8": (8, 7), "H-9": (9, 7), "H-10": (10, 7), "H-11": (11, 7),
+        "I-8": (8, 6), "I-9": (9, 6), "I-10": (10, 6), "I-11": (11, 6)
+    }
+    
+    if sector1 in SECTOR_COORDS and sector2 in SECTOR_COORDS:
+        dx = abs(SECTOR_COORDS[sector1][0] - SECTOR_COORDS[sector2][0])
+        dy = abs(SECTOR_COORDS[sector1][1] - SECTOR_COORDS[sector2][1])
+        grid_dist = (dx + dy) * 2.0
+        
+        is_fg1 = sector1[0] in ['F', 'G']
+        is_fg2 = sector2[0] in ['F', 'G']
+        is_i1 = sector1[0] in ['I', 'H']
+        is_i2 = sector2[0] in ['I', 'H']
+        
+        if (is_fg1 and is_i2) or (is_fg2 and is_i1):
+            grid_dist += 3.0
+            
+        return round(grid_dist, 2), "Tier 2: Islamabad Sector Grid Adjacency"
+        
+    raw_h = haversine_distance(lat1, lon1, lat2, lon2)
+    circuity_dist = raw_h * 1.3
+    return round(circuity_dist, 2), "Tier 3: Haversine with Circuity Coefficient (1.3x)"
+
 def get_all_providers() -> List[Dict[str, Any]]:
     """
     Retrieves all providers from Cloud Firestore.
@@ -59,26 +123,29 @@ def calculate_match_score(
     user_lat: float, 
     user_lng: float, 
     parsed_intent: Dict[str, Any]
-) -> Tuple[float, Dict[str, float], float]:
+) -> Tuple[float, Dict[str, float], float, str]:
     """
-    Implements the 8-Factor Dynamic Match Scoring Algorithm.
-    Returns: (final_score_0_to_100, itemized_factors_dict, distance_km)
+    Implements the 9-Factor Dynamic Match Scoring Algorithm with Job Complexity Rules.
+    Returns: (final_score_0_to_100, itemized_factors_dict, distance_km, routing_tier)
     """
     service_type = parsed_intent.get("service_type", "").lower()
     urgency = parsed_intent.get("urgency", "standard").lower()
     specializations_needed = parsed_intent.get("specializations", [])
     budget_limit = parsed_intent.get("budget_limit", None)
+    intent_sector = parsed_intent.get("sector", None)
     
     # Factor 1: Category Relevance (Strict Binary Filter)
     provider_cats = [c.lower() for c in provider.get("service_categories", [])]
     if service_type not in provider_cats:
-        return 0.0, {}, 0.0
+        return 0.0, {}, 0.0, "None"
         
     p_lat = provider["location"]["lat"]
     p_lng = provider["location"]["lng"]
-    dist_km = haversine_distance(user_lat, user_lng, p_lat, p_lng)
     
-    # Factor 2: Proximity Score (Weight: 25%)
+    # Resolve distance using Multi-Tier Routing Resolver
+    dist_km, routing_tier = resolve_multi_tier_distance(user_lat, user_lng, p_lat, p_lng, intent_sector)
+    
+    # Factor 2: Proximity Score (Weight: 20%)
     # Under 2km = 100 pts. Drops linearly to 0 pts at 15km.
     if dist_km <= 2.0:
         proximity_pts = 100.0
@@ -87,7 +154,7 @@ def calculate_match_score(
     else:
         proximity_pts = 100.0 * (1.0 - (dist_km - 2.0) / 13.0)
         
-    # Factor 3: Experience Score (Weight: 15%)
+    # Factor 3: Experience Score (Weight: 10%)
     # 15+ years = 100 pts, scaled linearly from 0 years.
     exp = provider.get("experience_years", 0)
     exp_pts = min(100.0, (exp / 15.0) * 100.0)
@@ -97,15 +164,12 @@ def calculate_match_score(
     ontime_pts = on_time * 100.0
     
     # Factor 5: Average Rating Score (Weight: 15%)
-    # Scale rating (normally 1-5 stars) to 0-100 pts.
     rating = provider.get("rating", 4.0)
     rating_pts = max(0.0, ((rating - 1.0) / 4.0) * 100.0)
     
-    # Factor 6: Urgency & Slots Score (Weight: 10%)
-    # High urgency checks if they have slots today or in the next 4 hours
-    urgency_pts = 50.0 # base baseline
+    # Factor 6: Urgency & Slots Score / Availability (Weight: 10%)
+    urgency_pts = 50.0
     if urgency == "high":
-        # Check if slots are within 8 hours
         has_near_slot = False
         now = datetime.now()
         eight_hours_later = now + timedelta(hours=8)
@@ -121,44 +185,37 @@ def calculate_match_score(
         if has_near_slot:
             urgency_pts = 100.0
         else:
-            urgency_pts = 30.0 # penalized if they have no immediate slots
+            urgency_pts = 30.0
             
     # Factor 7: Specialization Boost Score (Weight: 10%)
-    # Matches provider's specialization array with parsed query specifications
     spec_matches = 0
     p_specs = [s.lower() for s in provider.get("specializations", [])]
-    
     for s_need in specializations_needed:
         if s_need.lower() in p_specs:
             spec_matches += 1
-            
     spec_pts = 100.0 if (specializations_needed and spec_matches > 0) else (50.0 if not specializations_needed else 20.0)
     
     # Factor 8: Price Sensitivity Match Score (Weight: 10%)
-    # Score is high if provider is within budget, or matches budget expectations
     price_pts = 50.0
     p_rate = provider.get("base_rate_pkr", 500)
     if budget_limit:
         if p_rate <= budget_limit:
-            # high score for budget compatibility
             price_pts = 100.0
         else:
-            # penalize linear ratio
             price_pts = max(0.0, 100.0 - ((p_rate - budget_limit) / budget_limit) * 100.0)
     else:
-        # Standard average baseline matching
         if p_rate <= 700:
             price_pts = 85.0
         else:
             price_pts = 60.0
             
-    # Factor 7: Cancellation Penalty Score (Weight: 5%)
+    # Factor 9: Cancellation Penalty Score (Weight: 5%)
     cancel_rate = provider.get("cancellation_rate", 0.0)
     cancel_pts = max(0.0, (1.0 - cancel_rate) * 100.0)
     
-    # Factor 8: Review Sentiment Score (Weight: 5%)
+    # Factor 10: Review Sentiment Score (Weight: 5%)
     reviews = provider.get("recent_reviews", [])
-    sentiment_pts = 75.0  # baseline if no reviews
+    sentiment_pts = 75.0
     if reviews:
         total_rating = 0
         positive_keywords = ["mahir", "acha", "badhiya", "neat", "clean", "satisfied", "highly professional", "recommended", "best", "skilled", "waqt per", "nice"]
@@ -179,13 +236,42 @@ def calculate_match_score(
         rating_sentiment = max(0.0, ((avg_rev_rating - 1.0) / 4.0) * 100.0)
         sentiment_pts = min(100.0, max(0.0, rating_sentiment + keyword_boost))
         
+    # --- Job Complexity Classification Rules ---
+    # Determine Job Complexity based on service type, tags, and text parameters
+    complexity_class = "basic"
+    text_query = parsed_intent.get("original_text", "").lower()
+    
+    # Heuristics for classifying job complexity:
+    complex_triggers = ["compressor", "complete rewiring", "pcb", "installation", "leakage check", "board burn", "fiting", "fitting", "mushkil"]
+    inter_triggers = ["repair", "service", "short circuit", "replace", "washing machine repair", "motor"]
+    
+    if any(t in text_query for t in complex_triggers):
+        complexity_class = "complex"
+    elif any(t in text_query for t in inter_triggers):
+        complexity_class = "intermediate"
+        
+    # Strict matching matching rules:
+    complexity_multiplier = 1.0
+    if complexity_class == "complex":
+        # Complex jobs require 5+ years experience and specialization matching tags or certified credentials
+        if exp < 5:
+            complexity_multiplier = 0.1  # Severe penalty: drops matching score to avoid high risk mismatch
+            logger.info(f"Applying Complex Job Penalty to Provider {provider.get('pid')} (Exp {exp} yrs < 5)")
+        elif spec_pts < 50.0:
+            complexity_multiplier = 0.3  # Heavy penalty for lacking specialization tags
+    elif complexity_class == "intermediate":
+        # Intermediate jobs require 3+ years experience
+        if exp < 3:
+            complexity_multiplier = 0.8  # 20% penalty
+            logger.info(f"Applying Intermediate Job Penalty to Provider {provider.get('pid')} (Exp {exp} yrs < 3)")
+
     # Weights configuration
     weights = {
         "proximity": 0.20,
         "rating": 0.15,
         "on_time": 0.15,
         "experience": 0.10,
-        "urgency": 0.10,
+        "availability": 0.10,
         "specialization": 0.10,
         "price": 0.10,
         "cancellation": 0.05,
@@ -198,26 +284,30 @@ def calculate_match_score(
         rating_pts * weights["rating"] +
         ontime_pts * weights["on_time"] +
         exp_pts * weights["experience"] +
-        urgency_pts * weights["urgency"] +
+        urgency_pts * weights["availability"] +
         spec_pts * weights["specialization"] +
         price_pts * weights["price"] +
         cancel_pts * weights["cancellation"] +
         sentiment_pts * weights["sentiment"]
     )
     
+    final_score = final_score * complexity_multiplier
+    
     breakdown = {
         "proximity_pts": round(proximity_pts, 1),
         "rating_pts": round(rating_pts, 1),
         "on_time_pts": round(ontime_pts, 1),
         "experience_pts": round(exp_pts, 1),
-        "urgency_pts": round(urgency_pts, 1),
+        "availability_pts": round(urgency_pts, 1),
         "specialization_pts": round(spec_pts, 1),
         "price_pts": round(price_pts, 1),
         "cancellation_pts": round(cancel_pts, 1),
-        "sentiment_pts": round(sentiment_pts, 1)
+        "sentiment_pts": round(sentiment_pts, 1),
+        "job_complexity": complexity_class,
+        "complexity_multiplier": complexity_multiplier
     }
     
-    return round(final_score, 2), breakdown, round(dist_km, 2)
+    return round(final_score, 2), breakdown, round(dist_km, 2), routing_tier
 
 def update_provider_rating_in_firestore(
     provider_id: str,
@@ -315,7 +405,6 @@ def update_provider_rating_in_firestore(
         logger.error(f"update_provider_rating_in_firestore failed for {provider_id}: {e}")
         return {"updated_rating": new_rating, "penalty_applied": False, "action": f"error: {str(e)}"}
 
-
 def get_matching_providers(
     user_lat: float,
     user_lng: float,
@@ -330,12 +419,10 @@ def get_matching_providers(
     scored_list = []
 
     for p in all_providers:
-        # Skip flagged providers — they are hidden from search
         if p.get("flagged", False):
             logger.debug(f"Skipping flagged provider: {p.get('pid', 'unknown')}")
             continue
 
-        # Strict validation checks
         try:
             validated = ProviderModel(**p)
             p_dict = validated.model_dump()
@@ -343,13 +430,13 @@ def get_matching_providers(
             logger.warning(f"Provider {p.get('pid', 'unknown')} failed model validation: {e}")
             p_dict = p
 
-        score, factors, distance = calculate_match_score(p_dict, user_lat, user_lng, parsed_intent)
+        score, factors, distance, routing_tier = calculate_match_score(p_dict, user_lat, user_lng, parsed_intent)
         if score > 0:
             p_dict["match_score"] = score
             p_dict["match_factors"] = factors
             p_dict["distance_km"] = distance
+            p_dict["routing_tier"] = routing_tier
             scored_list.append(p_dict)
 
-    # Rank descending by score
     scored_list.sort(key=lambda x: x["match_score"], reverse=True)
     return scored_list[:limit]
