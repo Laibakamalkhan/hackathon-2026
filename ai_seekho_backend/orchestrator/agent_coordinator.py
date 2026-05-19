@@ -82,7 +82,9 @@ def run_orchestrated_matching(
         primary_quote = generate_price_quote(
             provider=best_p,
             distance_km=best_p["distance_km"],
-            parsed_intent=intent_parsed
+            parsed_intent=intent_parsed,
+            user_lat=user_lat,
+            user_lng=user_lng
         )
         
     step_3_lat = int((time.perf_counter() - step_3_start) * 1000)
@@ -217,7 +219,9 @@ def yield_orchestrated_matching(
         primary_quote = generate_price_quote(
             provider=best_p,
             distance_km=best_p["distance_km"],
-            parsed_intent=intent_parsed
+            parsed_intent=intent_parsed,
+            user_lat=user_lat,
+            user_lng=user_lng
         )
         
     step_3_lat = int((time.perf_counter() - step_3_start) * 1000)

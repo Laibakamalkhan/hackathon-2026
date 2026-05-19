@@ -30,11 +30,20 @@ def calculate_surge_multiplier(category: str) -> float:
 def generate_price_quote(
     provider: Dict[str, Any],
     distance_km: float,
-    parsed_intent: Dict[str, Any]
+    parsed_intent: Dict[str, Any],
+    user_lat: float = 33.649,
+    user_lng: float = 72.973
 ) -> PriceQuoteResponse:
     """
     Implements the core dynamic pricing formula:
     Total PKR = ((Base + Urgency + Complexity) * Surge) + VisitFee + DistanceFee - LoyaltyDiscount
+
+    Args:
+        provider: Provider dict with base_rate_pkr, per_km_rate, etc.
+        distance_km: Distance from user to provider.
+        parsed_intent: Structured intent with service_type, urgency, specializations.
+        user_lat: User's actual latitude (used for budget alternative search).
+        user_lng: User's actual longitude (used for budget alternative search).
     """
     category = parsed_intent.get("service_type", "").lower()
     urgency = parsed_intent.get("urgency", "standard").lower()
@@ -98,13 +107,13 @@ def generate_price_quote(
         breakdown_reasoning=reasoning
     )
     
-    # Find a cheaper budget alternative provider if possible
+    # Find a cheaper budget alternative provider using ACTUAL USER coordinates
     budget_alt = find_budget_alternative(
         primary_pid=provider["pid"],
         primary_total=total,
         category=category,
-        user_lat=provider["location"]["lat"], # use user coordinates from provider vicinity as baseline
-        user_lng=provider["location"]["lng"],
+        user_lat=user_lat,   # FIX: use actual user coordinates, not provider coordinates
+        user_lng=user_lng,   # FIX
         parsed_intent=parsed_intent
     )
     

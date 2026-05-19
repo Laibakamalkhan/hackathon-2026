@@ -4,6 +4,7 @@ import 'package:ai_seekho_flutter/app/theme.dart';
 import 'package:ai_seekho_flutter/shared/widgets/blob_background.dart';
 import 'package:ai_seekho_flutter/shared/widgets/glass_card.dart';
 import 'package:ai_seekho_flutter/shared/widgets/primary_button.dart';
+import 'package:ai_seekho_flutter/core/network/api_service.dart';
 
 class FeedbackScreen extends StatefulWidget {
   final String bookingId;
@@ -20,6 +21,7 @@ class FeedbackScreen extends StatefulWidget {
 class _FeedbackScreenState extends State<FeedbackScreen> {
   int _rating = 5;
   final TextEditingController _commentController = TextEditingController();
+  bool _isSubmitting = false;
 
   // Negative keywords that trigger immediate AI dispute arbitration
   final List<String> _disputeKeywords = [
@@ -27,10 +29,16 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     "bad", "terrible", "worst", "fraud", "extra money", "loot", "ziada paise"
   ];
 
-  void _submitFeedback() {
-    final comment = _commentController.text.toLowerCase();
-    
-    // Smart Routing Logic: Low rating (1 or 2 stars) or comment contains negative dispute words
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitFeedback() async {
+    final comment = _commentController.text.toLowerCase().trim();
+
+    // Smart Routing: Low rating (1-2★) or negative keywords → dispute
     bool isDispute = _rating <= 2;
     for (var word in _disputeKeywords) {
       if (comment.contains(word)) {
@@ -40,25 +48,57 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     }
 
     if (isDispute) {
-      // Auto routing to automated AI Dispute center
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("🚨 Low satisfaction detected. Initiating automated AI Dispute Mediation..."),
+          content: Text("🚨 Low satisfaction detected. Routing to AI Dispute Mediation..."),
           backgroundColor: AppColors.error,
         ),
       );
       context.push(
         '/dispute?id=${widget.bookingId}&rating=$_rating&reason=${Uri.encodeComponent(_commentController.text)}',
       );
-    } else {
-      // Direct successful completion flow routing to booking history
+      return;
+    }
+
+    // Submit feedback to real API
+    setState(() => _isSubmitting = true);
+    try {
+      final result = await apiService.submitFeedback(
+        bookingId: widget.bookingId,
+        rating: _rating.toDouble(),
+        comment: _commentController.text.trim(),
+        userId: 'user_demo_001',
+      );
+
+      if (!mounted) return;
+
+      if (result.containsKey('error')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Kuch masla hua, dobara koshish karein."),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("✅ Shukriya! Aap ka feedback submit ho gaya."),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        await Future.delayed(const Duration(milliseconds: 800));
+        if (mounted) context.go('/history');
+      }
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Thank you for your rating! feedback logged successfully."),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: Text("Network error: ${e.toString().substring(0, 50)}"),
+          backgroundColor: AppColors.error,
         ),
       );
-      context.go('/history');
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -80,15 +120,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text(
-                  "Rate Your Service",
-                  style: AppTextStyles.heading1,
-                ),
+                const Text("Rate Your Service", style: AppTextStyles.heading1),
                 const SizedBox(height: 4),
-                Text(
-                  "کاریگر کی ریٹنگ کریں",
-                  style: AppTextStyles.urdu.copyWith(fontSize: 16),
-                ),
+                Text("کاریگر کی ریٹنگ کریں", style: AppTextStyles.urdu.copyWith(fontSize: 16)),
                 const SizedBox(height: 24),
 
                 // Star Selection Card
@@ -96,10 +130,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
                   child: Column(
                     children: [
-                      const Text(
-                        "How was your repair experience?",
-                        style: AppTextStyles.bodyBold,
-                      ),
+                      const Text("How was your repair experience?", style: AppTextStyles.bodyBold),
                       const SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -111,11 +142,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                               color: Colors.amber,
                               size: 40,
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _rating = currentStar;
-                              });
-                            },
+                            onPressed: () => setState(() => _rating = currentStar),
                           );
                         }),
                       ),
@@ -133,11 +160,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Comments input box
-                const Text(
-                  "Comments / تاثرات",
-                  style: AppTextStyles.bodyBold,
-                ),
+                const Text("Comments / تاثرات", style: AppTextStyles.bodyBold),
                 const SizedBox(height: 8),
                 GlassCard(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -145,7 +168,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     controller: _commentController,
                     maxLines: 4,
                     decoration: const InputDecoration(
-                      hintText: "Share your experience or note any issues... (e.g. extra charges, bad behavior)",
+                      hintText: "Share your experience or note any issues...",
                       border: InputBorder.none,
                     ),
                     style: AppTextStyles.body,
@@ -153,10 +176,12 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 ),
                 const SizedBox(height: 36),
 
-                PrimaryButton(
-                  label: "Submit Feedback / جمع کریں",
-                  onPressed: _submitFeedback,
-                ),
+                _isSubmitting
+                    ? const Center(child: CircularProgressIndicator(color: AppColors.lavender))
+                    : PrimaryButton(
+                        label: "Submit Feedback / جمع کریں",
+                        onPressed: _submitFeedback,
+                      ),
                 const SizedBox(height: 16),
               ],
             ),

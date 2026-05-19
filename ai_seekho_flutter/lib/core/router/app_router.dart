@@ -30,7 +30,8 @@ import '../../features/bookings/screens/dispute_resolution_screen.dart';
 import '../../features/provider/screens/provider_dashboard_screen.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/',
+  // DEMO MODE: Skip onboarding and start directly at home screen
+  initialLocation: '/home',
   routes: [
     // Onboarding & Registration flow
     GoRoute(
@@ -158,10 +159,17 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/dispute-resolution',
       builder: (context, state) {
+        // Prefer real GuardianAgent data passed via state.extra
+        final extra = state.extra as Map<String, dynamic>?;
+        if (extra != null) {
+          return DisputeResolutionScreen(resolutionData: extra);
+        }
+        // Legacy fallback: query params from old route
         final id = state.uri.queryParameters['id'] ?? '';
         final category = state.uri.queryParameters['category'] ?? '';
         final details = state.uri.queryParameters['details'] ?? '';
-        return DisputeResolutionScreen(bookingId: id, category: category, details: details);
+        return DisputeResolutionScreen(
+            bookingId: id, category: category, details: details);
       },
     ),
 

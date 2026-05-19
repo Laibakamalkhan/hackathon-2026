@@ -1,7 +1,7 @@
 import math
 import json
 import logging
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 from pathlib import Path
 from datetime import datetime, timedelta
 
@@ -219,35 +219,137 @@ def calculate_match_score(
     
     return round(final_score, 2), breakdown, round(dist_km, 2)
 
+def update_provider_rating_in_firestore(
+    provider_id: str,
+    new_rating: float,
+    dispute_type: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Updates provider rating in Firestore with rolling average.
+    Handles offense tracking for dispute penalties.
+    Falls back silently if Firestore unavailable.
+
+    Returns: { "updated_rating": float, "penalty_applied": bool, "action": str }
+    """
+    if not db:
+        return {"updated_rating": new_rating, "penalty_applied": False, "action": "firestore_unavailable"}
+
+    try:
+        doc_ref = db.collection("providers").document(provider_id)
+        doc = doc_ref.get()
+
+        if not doc.exists:
+            logger.warning(f"Provider {provider_id} not found in Firestore.")
+            return {"updated_rating": new_rating, "penalty_applied": False, "action": "provider_not_found"}
+
+        provider_data = doc.to_dict()
+        old_avg = float(provider_data.get("rating", 4.0) or 4.0)
+        old_count = int(provider_data.get("rating_count", 1) or 1)
+
+        # Compute new rolling average
+        new_avg = round((old_avg * old_count + new_rating) / (old_count + 1), 2)
+
+        update_payload = {
+            "rating": new_avg,
+            "rating_count": old_count + 1,
+            "updated_at": datetime.now().isoformat()
+        }
+
+        penalty_applied = False
+        action = "rating_updated"
+
+        # Offense tracking
+        if dispute_type is not None:
+            now = datetime.now()
+            cutoff = (now - timedelta(days=30)).isoformat()
+
+            existing_warnings = provider_data.get("warnings", [])
+            # Count same-type warnings in last 30 days
+            recent_same_type = [
+                w for w in existing_warnings
+                if w.get("dispute_type") == dispute_type
+                and w.get("timestamp", "") >= cutoff
+            ]
+            offense_count = len(recent_same_type)
+
+            # Log this warning
+            warning_entry = {
+                "dispute_type": dispute_type,
+                "timestamp": now.isoformat(),
+                "rating_impact": new_rating
+            }
+            existing_warnings.append(warning_entry)
+            update_payload["warnings"] = existing_warnings
+
+            all_warnings_count = len(provider_data.get("warnings", [])) + 1
+            risk_score = float(provider_data.get("risk_score", 0.0) or 0.0)
+
+            if offense_count >= 1:  # 2nd same offense in 30 days
+                # Apply match score penalty for 30 days
+                update_payload["ranking_penalty_until"] = (
+                    now + timedelta(days=30)
+                ).isoformat()
+                update_payload["ranking_penalty_value"] = -0.15
+                penalty_applied = True
+                action = "ranking_penalty_applied"
+                logger.warning(
+                    f"Provider {provider_id}: 2nd {dispute_type} offense — ranking penalty applied."
+                )
+
+            if all_warnings_count >= 3 or risk_score > 0.7:
+                # Flag provider — hidden from search
+                update_payload["flagged"] = True
+                action = "provider_flagged"
+                logger.error(
+                    f"Provider {provider_id}: Flagged after {all_warnings_count} warnings "
+                    f"or risk_score={risk_score}. Hidden from search."
+                )
+            else:
+                action = action if penalty_applied else "warning_logged"
+
+        doc_ref.update(update_payload)
+        logger.info(f"Provider {provider_id} rating updated: {old_avg} -> {new_avg}. Action: {action}")
+        return {"updated_rating": new_avg, "penalty_applied": penalty_applied, "action": action}
+
+    except Exception as e:
+        logger.error(f"update_provider_rating_in_firestore failed for {provider_id}: {e}")
+        return {"updated_rating": new_rating, "penalty_applied": False, "action": f"error: {str(e)}"}
+
+
 def get_matching_providers(
-    user_lat: float, 
-    user_lng: float, 
-    parsed_intent: Dict[str, Any], 
+    user_lat: float,
+    user_lng: float,
+    parsed_intent: Dict[str, Any],
     limit: int = 5
 ) -> List[Dict[str, Any]]:
     """
-    Filters, scores, and ranks all service providers using the 8-Factor Match System.
+    Filters, scores, and ranks all service providers using the 9-Factor Match System.
+    Automatically excludes flagged providers.
     """
     all_providers = get_all_providers()
     scored_list = []
-    
+
     for p in all_providers:
+        # Skip flagged providers — they are hidden from search
+        if p.get("flagged", False):
+            logger.debug(f"Skipping flagged provider: {p.get('pid', 'unknown')}")
+            continue
+
         # Strict validation checks
         try:
-            # Try parsing with ProviderModel to validate schema
             validated = ProviderModel(**p)
             p_dict = validated.model_dump()
         except Exception as e:
             logger.warning(f"Provider {p.get('pid', 'unknown')} failed model validation: {e}")
             p_dict = p
-            
+
         score, factors, distance = calculate_match_score(p_dict, user_lat, user_lng, parsed_intent)
         if score > 0:
             p_dict["match_score"] = score
             p_dict["match_factors"] = factors
             p_dict["distance_km"] = distance
             scored_list.append(p_dict)
-            
+
     # Rank descending by score
     scored_list.sort(key=lambda x: x["match_score"], reverse=True)
     return scored_list[:limit]

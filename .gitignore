@@ -1,0 +1,60 @@
+# ============================================================
+# ROOT .gitignore — AI Seekho Hackathon Project
+# ============================================================
+
+# -----------------------------------------------
+# CRITICAL: Firebase Service Account Credentials
+# NEVER commit these — they grant full Firebase admin access
+# -----------------------------------------------
+*-firebase-adminsdk-*.json
+firebase-adminsdk-*.json
+service-account*.json
+service_account*.json
+
+# Android Firebase config (contains API keys)
+google-services.json
+
+# iOS Firebase config (if present)
+GoogleService-Info.plist
+
+# -----------------------------------------------
+# Python Backend
+# -----------------------------------------------
+ai_seekho_backend/.env
+ai_seekho_backend/__pycache__/
+ai_seekho_backend/**/__pycache__/
+ai_seekho_backend/**/*.pyc
+ai_seekho_backend/**/*.pyo
+ai_seekho_backend/**/*.pyd
+ai_seekho_backend/.venv/
+ai_seekho_backend/venv/
+ai_seekho_backend/env/
+ai_seekho_backend/*.egg-info/
+ai_seekho_backend/dist/
+ai_seekho_backend/build/
+ai_seekho_backend/.pytest_cache/
+ai_seekho_backend/.coverage
+ai_seekho_backend/htmlcov/
+ai_seekho_backend/*.log
+
+# -----------------------------------------------
+# IDE / Editor
+# -----------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# -----------------------------------------------
+# OS artifacts
+# -----------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini

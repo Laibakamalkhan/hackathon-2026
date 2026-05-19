@@ -1,0 +1,63 @@
+# ============================================================
+# BACKEND .gitignore — ai_seekho_backend
+# ============================================================
+
+# Environment variables — NEVER commit real credentials
+.env
+.env.local
+.env.production
+.env.staging
+
+# Firebase credentials — NEVER commit
+*-firebase-adminsdk-*.json
+*.json.key
+
+# Python compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.env/
+
+# Distribution / packaging
+.eggs/
+*.egg-info/
+dist/
+build/
+*.egg
+MANIFEST
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+
+# Logging
+*.log
+logs/
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytype/
+
+# Jupyter notebooks (if any)
+.ipynb_checkpoints/
+
+# Profiling
+*.prof

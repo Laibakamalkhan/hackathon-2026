@@ -33,12 +33,76 @@ HEURISTICS = {
     "general_home": ["sofa", "carpenter", "pest", "paint", "safai", "wood", "furniture", "diwar"]
 }
 
+def _compute_confidence_and_followup(
+    service_type: str,
+    urgency: str,
+    location_mention,
+    budget_limit,
+    specializations: list,
+    used_heuristic: bool = False
+) -> Dict[str, Any]:
+    """
+    Computes real confidence score based on field completeness.
+    Returns dict with 'confidence' and 'follow_up_question'.
+    """
+    if used_heuristic:
+        return {
+            "confidence": 0.70,
+            "follow_up_question": None
+        }
+
+    # Count how many of the 5 key fields are present
+    fields = [
+        service_type and service_type != "general_home",  # service_type meaningful
+        urgency in ["high", "standard"],                   # urgency detected
+        location_mention is not None,                       # location present
+        budget_limit is not None,                           # budget present
+        len(specializations) > 0                            # specializations present
+    ]
+    present_count = sum(1 for f in fields if f)
+
+    if present_count == 5:
+        confidence = 0.95
+    elif present_count == 4:
+        confidence = 0.80
+    elif present_count == 3:
+        confidence = 0.65
+    else:
+        confidence = 0.55
+
+    follow_up_question = None
+    if confidence < 0.70:
+        # Ask for the single most important missing field
+        if not location_mention:
+            follow_up_question = (
+                "Aap ka ghar kaunse sector mein hai? (maslan G-13, F-10, E-11)"
+            )
+        elif not budget_limit and urgency == "standard":
+            follow_up_question = (
+                "Aap ka approximate budget kya hai? (maslan PKR 1000-2000)"
+            )
+        elif service_type == "general_home" and not specializations:
+            follow_up_question = (
+                "Aap ko exactly kya kaam karwana hai? Thodi aur tafseelaat batayein."
+            )
+        else:
+            follow_up_question = (
+                "Kya aap apni zaroorat ke baare mein thodi aur tafseelaat de sakte hain?"
+            )
+
+    return {
+        "confidence": confidence,
+        "follow_up_question": follow_up_question
+    }
+
+
 def parse_intent_heuristically(query: str) -> Dict[str, Any]:
     """
     Highly resilient fallback heuristic parser when Gemini API is unavailable.
+    Includes real confidence scoring and follow_up_question.
     """
     query_lower = query.lower()
-    
+
     # 1. Determine service type by keyword matching
     service_type = "general_home"  # default baseline
     max_matches = 0
@@ -47,13 +111,13 @@ def parse_intent_heuristically(query: str) -> Dict[str, Any]:
         if matches > max_matches:
             max_matches = matches
             service_type = cat
-            
+
     # 2. Determine urgency
     urgency = "standard"
     urgency_keywords = ["jaldi", "foran", "urgent", "immediately", "emergency", "abbi", "broken", "leakage", "blasts"]
     if any(ukw in query_lower for ukw in urgency_keywords):
         urgency = "high"
-        
+
     # 3. Detect specialized items
     specializations = []
     if "inverter" in query_lower:
@@ -64,13 +128,12 @@ def parse_intent_heuristically(query: str) -> Dict[str, Any]:
         specializations.append("leak_detection")
     if "ups" in query_lower:
         specializations.append("ups_installation")
-        
+
     # 4. Extract budget limits (e.g. "budget 1000", "under 1500")
     budget_limit = None
     words = query_lower.split()
     for idx, w in enumerate(words):
         if w in ["budget", "under", "rs", "pkr", "rate"]:
-            # Check next word for a number
             if idx + 1 < len(words):
                 try:
                     num = int(''.join(filter(str.isdigit, words[idx + 1])))
@@ -79,14 +142,23 @@ def parse_intent_heuristically(query: str) -> Dict[str, Any]:
                         break
                 except ValueError:
                     pass
-                    
+
     # 5. Location mentions
     location_mention = None
     for sec in ["g-13", "g-11", "f-11", "f-10", "e-11", "i-8", "h-13", "g-10", "g-9"]:
         if sec in query_lower:
             location_mention = sec.upper()
             break
-            
+
+    confidence_data = _compute_confidence_and_followup(
+        service_type=service_type,
+        urgency=urgency,
+        location_mention=location_mention,
+        budget_limit=budget_limit,
+        specializations=specializations,
+        used_heuristic=True  # heuristic always gives 0.70
+    )
+
     return {
         "service_type": service_type,
         "urgency": urgency,
@@ -94,7 +166,9 @@ def parse_intent_heuristically(query: str) -> Dict[str, Any]:
         "budget_limit": budget_limit,
         "location_mention": location_mention,
         "urdu_reasoning": "Heuristic fallback se text analyze kiya gaya hai kyunki Gemini API connected nahi hai.",
-        "english_reasoning": "Parsed using keyword fallback matching due to Gemini API offline status."
+        "english_reasoning": "Parsed using keyword fallback matching due to Gemini API offline status.",
+        "confidence": confidence_data["confidence"],
+        "follow_up_question": confidence_data["follow_up_question"]
     }
 
 def parse_user_intent(query: str) -> Dict[str, Any]:
@@ -146,9 +220,21 @@ def parse_user_intent(query: str) -> Dict[str, Any]:
         parsed["specializations"] = parsed.get("specializations", [])
         parsed["budget_limit"] = parsed.get("budget_limit", None)
         parsed["location_mention"] = parsed.get("location_mention", None)
-        
+
+        # Compute real confidence based on field completeness
+        confidence_data = _compute_confidence_and_followup(
+            service_type=parsed.get("service_type", "general_home"),
+            urgency=parsed.get("urgency", "standard"),
+            location_mention=parsed.get("location_mention"),
+            budget_limit=parsed.get("budget_limit"),
+            specializations=parsed.get("specializations", []),
+            used_heuristic=False
+        )
+        parsed["confidence"] = confidence_data["confidence"]
+        parsed["follow_up_question"] = confidence_data["follow_up_question"]
+
         return parsed
-        
+
     except Exception as e:
         logger.warning(f"Gemini intent parsing failed ({e}). Reverting to fallback heuristics...")
         return parse_intent_heuristically(query)
