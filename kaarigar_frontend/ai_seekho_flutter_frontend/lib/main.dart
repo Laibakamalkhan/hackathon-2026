@@ -6,6 +6,7 @@ import 'core/constants/api_endpoints.dart';
 import 'core/network/http_client.dart';
 import 'core/theme/app_theme.dart';
 import 'routes/app_router.dart';
+import 'widgets/backend_status_banner.dart';
 
 /// Pings GET / on the backend at startup.
 /// Returns true if reachable, false otherwise.
@@ -58,6 +59,15 @@ class KarigarApp extends ConsumerWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       routerConfig: router,
+      // Inject the global offline banner above every route without modifying
+      // individual scaffolds. BackendStatusBanner returns SizedBox.shrink()
+      // when both backend is online and bookings are fresh.
+      builder: (context, child) => Column(
+        children: [
+          const BackendStatusBanner(),
+          Expanded(child: child ?? const SizedBox.shrink()),
+        ],
+      ),
     );
   }
 }

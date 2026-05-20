@@ -73,7 +73,68 @@ class MatchingState {
 class MatchingNotifier extends StateNotifier<MatchingState> {
   MatchingNotifier() : super(const MatchingState());
 
-  /// Calls /api/v1/agent/coordinate via HTTP and stores the full result.
+  // ── Single normaliser ────────────────────────────────────────────────────
+
+  /// Normalises any coordinator payload — HTTP response or WS "completed"
+  /// event — into [MatchingState] fields and updates state atomically.
+  ///
+  /// Field mapping:
+  ///
+  /// | MatchingState field | Primary key        | Fallback key                     |
+  /// |---------------------|--------------------|----------------------------------|
+  /// | providers           | providers          | matching_providers               |
+  /// | quote               | quote              | price_quote                      |
+  /// | handoff             | handoff            | (none)                           |
+  /// | extractedFields     | extracted_fields   | updated_state.extracted_fields   |
+  /// | confidence          | confidence         | updated_state.confidence         |
+  /// | action              | action             | (none)                           |
+  /// | coordinatorResult   | raw map stored as-is for downstream screens            |
+  void _applyCoordinatorPayload(Map<String, dynamic> raw) {
+    // providers
+    final rawProviders = (raw['providers'] ??
+        raw['matching_providers'] ??
+        <dynamic>[]) as List<dynamic>;
+    final providers = rawProviders
+        .map((p) => ServiceProvider.fromJson(p as Map<String, dynamic>))
+        .toList();
+
+    // quote
+    final quote =
+        (raw['quote'] ?? raw['price_quote']) as Map<String, dynamic>?;
+
+    // handoff
+    final handoff = raw['handoff'] as Map<String, dynamic>?;
+
+    // extractedFields — top-level or nested under updated_state
+    final extractedFields = (raw['extracted_fields'] ??
+        (raw['updated_state'] as Map<String, dynamic>?)?['extracted_fields'])
+        as Map<String, dynamic>?;
+
+    // confidence — top-level or nested under updated_state
+    final confidenceRaw = raw['confidence'] ??
+        (raw['updated_state'] as Map<String, dynamic>?)?['confidence'];
+    final double? confidence =
+        confidenceRaw is num ? confidenceRaw.toDouble() : null;
+
+    // action
+    final action = raw['action'] as String?;
+
+    state = state.copyWith(
+      coordinatorResult: raw,
+      providers: providers,
+      quote: quote,
+      handoff: handoff,
+      extractedFields: extractedFields,
+      confidence: confidence,
+      action: action,
+      isLoading: false,
+      clearError: true,
+    );
+  }
+
+  // ── Public API ───────────────────────────────────────────────────────────
+
+  /// Calls /api/v1/agent/coordinate via HTTP and normalises the response.
   ///
   /// After this resolves, [MatchingState.providers] and [MatchingState.quote]
   /// are populated and ready for ProviderRankingScreen / PriceBreakdownScreen.
@@ -91,44 +152,7 @@ class MatchingNotifier extends StateNotifier<MatchingState> {
         lng: lng,
         sessionId: sessionId,
       );
-
-      // Parse providers list from the coordinator response.
-      // The backend returns either result['providers'] or result['matching_providers'].
-      final rawProviders = (result['providers'] ??
-          result['matching_providers'] ??
-          []) as List<dynamic>;
-
-      final providers = rawProviders
-          .map((p) => ServiceProvider.fromJson(p as Map<String, dynamic>))
-          .toList();
-
-      // Quote is at result['quote'] or result['price_quote'].
-      final quote = (result['quote'] ?? result['price_quote'])
-          as Map<String, dynamic>?;
-
-      // Handoff payload for agentExecute.
-      final handoff = result['handoff'] as Map<String, dynamic>?;
-
-      // Extra fields
-      final extractedFields = (result['extracted_fields'] ??
-          result['updated_state']?['extracted_fields']) as Map<String, dynamic>?;
-
-      final confidenceRaw = result['confidence'] ??
-          result['updated_state']?['confidence'];
-      final double? confidence = confidenceRaw is num ? confidenceRaw.toDouble() : null;
-
-      final action = result['action'] as String?;
-
-      state = state.copyWith(
-        isLoading: false,
-        coordinatorResult: result,
-        providers: providers,
-        quote: quote,
-        handoff: handoff,
-        extractedFields: extractedFields,
-        confidence: confidence,
-        action: action,
-      );
+      _applyCoordinatorPayload(result);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -139,58 +163,28 @@ class MatchingNotifier extends StateNotifier<MatchingState> {
 
   /// Stores the completed WebSocket event's payload directly.
   ///
-  /// Called by [ChatActiveScreen] when the WS "completed" event arrives,
-  /// so that ProviderRankingScreen can immediately use the data.
+  /// Called by [ChatActiveScreen] when the WS "completed" event arrives so that
+  /// ProviderRankingScreen can immediately use the data. Delegates to the shared
+  /// [_applyCoordinatorPayload] normaliser — no duplicate parse logic.
   void storeCoordinatorResult(Map<String, dynamic> result) {
-    final rawProviders = (result['providers'] ??
-        result['matching_providers'] ??
-        []) as List<dynamic>;
-
-    final providers = rawProviders
-        .map((p) => ServiceProvider.fromJson(p as Map<String, dynamic>))
-        .toList();
-
-    final quote = (result['quote'] ?? result['price_quote'])
-        as Map<String, dynamic>?;
-
-    final handoff = result['handoff'] as Map<String, dynamic>?;
-
-    final extractedFields = (result['extracted_fields'] ??
-        result['updated_state']?['extracted_fields']) as Map<String, dynamic>?;
-
-    final confidenceRaw = result['confidence'] ??
-        result['updated_state']?['confidence'];
-    final double? confidence = confidenceRaw is num ? confidenceRaw.toDouble() : null;
-
-    final action = result['action'] as String?;
-
-    state = state.copyWith(
-      coordinatorResult: result,
-      providers: providers,
-      quote: quote,
-      handoff: handoff,
-      extractedFields: extractedFields,
-      confidence: confidence,
-      action: action,
-      isLoading: false,
-      clearError: true,
-    );
+    _applyCoordinatorPayload(result);
   }
 
   void updateHandoffProvider(ServiceProvider selected) {
     if (state.handoff == null) return;
-    
+
     final handoffCopy = Map<String, dynamic>.from(state.handoff!);
-    final fullContext = handoffCopy['full_context'] != null 
-        ? Map<String, dynamic>.from(handoffCopy['full_context'] as Map) 
+    final fullContext = handoffCopy['full_context'] != null
+        ? Map<String, dynamic>.from(handoffCopy['full_context'] as Map)
         : <String, dynamic>{};
-        
+
     fullContext['provider_id'] = selected.id;
-    
+
     // Find raw provider from coordinatorResult if possible
-    final rawProviders = (state.coordinatorResult?['providers'] ?? 
-        state.coordinatorResult?['matching_providers'] ?? []) as List<dynamic>;
-        
+    final rawProviders = (state.coordinatorResult?['providers'] ??
+        state.coordinatorResult?['matching_providers'] ??
+        []) as List<dynamic>;
+
     Map<String, dynamic>? rawProviderMap;
     for (var p in rawProviders) {
       if (p['id'] == selected.id || p['provider_id'] == selected.id) {
@@ -198,7 +192,7 @@ class MatchingNotifier extends StateNotifier<MatchingState> {
         break;
       }
     }
-    
+
     if (rawProviderMap != null) {
       fullContext['provider'] = rawProviderMap;
     } else {
@@ -209,10 +203,10 @@ class MatchingNotifier extends StateNotifier<MatchingState> {
         'price': selected.price,
       };
     }
-    
+
     handoffCopy['full_context'] = fullContext;
     handoffCopy['provider_id'] = selected.id;
-    
+
     state = state.copyWith(handoff: handoffCopy);
   }
 

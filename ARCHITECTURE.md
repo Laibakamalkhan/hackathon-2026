@@ -244,12 +244,56 @@ flutter run                                        # physical device / iOS sim
 
 ---
 
-## 10. Updating This Document
+## 11. Coordinator Payload Normalisation
+
+Both the HTTP response from `POST /api/v1/agent/coordinate` and the final
+`completed` event from `WS /ws/agent-stream` are normalised by the **single**
+private method `MatchingNotifier._applyCoordinatorPayload(Map raw)` in
+`lib/features/matching/providers/matching_provider.dart`.
+
+Neither `coordinate()` nor `storeCoordinatorResult()` contains its own parse
+logic — both delegate to this method. This is the only place field aliasing
+should be updated if the backend contract changes.
+
+### Field Mapping Table
+
+| `MatchingState` field | Primary key in payload  | Fallback key                          |
+|-----------------------|-------------------------|---------------------------------------|
+| `providers`           | `providers`             | `matching_providers`                  |
+| `quote`               | `quote`                 | `price_quote`                         |
+| `handoff`             | `handoff`               | *(none)*                              |
+| `extractedFields`     | `extracted_fields`      | `updated_state.extracted_fields`      |
+| `confidence`          | `confidence`            | `updated_state.confidence`            |
+| `action`              | `action`                | *(none)*                              |
+| `coordinatorResult`   | *(raw map stored as-is — downstream screens read from it directly)* | |
+
+### Offline / WS-Failure Decision Tree
+
+```
+Chat initiated
+  └─► _connectWebSocket()
+        ├─ WS "completed" → storeCoordinatorResult() → _routeOnAction()
+        └─ onError / onDone (stage < 4)
+              └─► backendOnline?
+                    ├─ YES → _retryViaHttp() (automatic, no user tap)
+                    │          ├─ HTTP success → cancel timer, stage=4, _routeOnAction()
+                    │          └─ HTTP failure → show error panel  [NO timer fallback]
+                    └─ NO  → _fallbackToTimer()  (demo offline pipeline)
+```
+
+`BackendStatusBanner` (injected globally via `MaterialApp.router builder`) is
+the only place that surfaces the offline state to the user; individual screens
+do not need their own banners.
+
+---
+
+## 12. Updating This Document
 
 **Always update ARCHITECTURE.md when:**
 - A new API endpoint is added or removed
 - A Dart-define flag is added or renamed
 - A new Firestore collection is introduced
 - The canonical frontend path changes
+- The coordinator payload field mapping changes (update §11 table)
 
 > This document is checked during PR review for the `ai-seekho-hackathon-2026` repo.
