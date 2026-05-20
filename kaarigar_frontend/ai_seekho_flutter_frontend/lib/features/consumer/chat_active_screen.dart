@@ -31,9 +31,15 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
   double _progress = 0;
   bool _editingIntent = false;
 
-  /// True when backend is reachable but WS failed — shows retry banner
-  /// instead of silently falling through to the fake timer.
-  bool _showWsErrorBanner = false;
+  /// Set once in initState; reused by WS send + HTTP coordinate so both calls
+  /// share the same session ID for backend traceability.
+  late final String _sessionId;
+
+  /// Non-null only when the HTTP fallback itself failed (backend online but
+  /// both WS and HTTP errored). Shown as an error row in the pipeline panel.
+  /// When this is set the timer is NOT started — we show a real error, not
+  /// a fake progress animation.
+  String? _httpErrorMessage;
 
   // Real-time WebSocket stream.
   Timer? _progressTimer;
@@ -118,6 +124,7 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
   @override
   void initState() {
     super.initState();
+    _sessionId = 'session-${DateTime.now().millisecondsSinceEpoch}';
     ref.read(chatFlowPhaseProvider.notifier).state = ChatFlowPhase.processing;
     _startProgressBar();
     _connectWebSocket();
@@ -134,6 +141,7 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
   // ── Progress bar ──────────────────────────────────────────────────────────
 
   void _startProgressBar() {
+    _progressTimer?.cancel();
     _progressTimer = Timer.periodic(const Duration(milliseconds: 60), (_) {
       if (_progress < 95 && mounted) setState(() => _progress += 0.8);
     });
@@ -154,7 +162,7 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
           'query': query.isNotEmpty ? query : 'AC repair kar do',
           'lat': 33.649,
           'lng': 72.973,
-          'session_id': 'session-${DateTime.now().millisecondsSinceEpoch}',
+          'session_id': _sessionId,
         });
       });
 
@@ -190,8 +198,7 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
                 _stage = 4;
                 _progress = 100;
               });
-              // Store result so ProviderRankingScreen / PriceBreakdownScreen
-              // can read providers, quote, handoff immediately.
+              // Normalise via the shared _applyCoordinatorPayload normaliser.
               ref
                   .read(matchingNotifierProvider.notifier)
                   .storeCoordinatorResult(event);
@@ -205,6 +212,7 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
           if (mounted) _handleWsError();
         },
         onDone: () {
+          // Closed before a completed event — treat as failure.
           if (mounted && _stage < 4) _handleWsError();
         },
       );
@@ -268,26 +276,34 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
 
   /// Called on WS error / close before completion.
   ///
-  /// - Backend **online**: shows a non-fatal banner with "Retry via HTTP"
-  ///   and "Use Demo" options.  Does NOT silently run fake timer.
-  /// - Backend **offline**: falls through to the timer-driven demo UI so the
-  ///   app remains usable without any network.
+  /// Decision tree:
+  /// • Backend **online** → automatically trigger HTTP coordinate (no user tap).
+  ///   - HTTP success → cancel timer, advance to stage 4, route on action.
+  ///   - HTTP failure → show error message in pipeline panel; NO timer fallback.
+  /// • Backend **offline** → show "Demo offline pipeline" notice, then run the
+  ///   timer-driven demo UI so the app stays usable without a network.
   void _handleWsError() {
     final backendOnline = ref.read(backendOnlineProvider);
     if (backendOnline) {
-      setState(() => _showWsErrorBanner = true);
+      // Automatically fall back to HTTP — no silent fake timer.
+      _retryViaHttp();
     } else {
       _fallbackToTimer();
     }
   }
 
-  /// HTTP retry — calls /api/v1/agent/coordinate directly when WS failed.
+  /// HTTP fallback — calls /api/v1/agent/coordinate directly.
+  ///
+  /// Invoked automatically (not by a user button tap) when WS fails and the
+  /// backend was reachable at startup.
   Future<void> _retryViaHttp() async {
+    if (!mounted) return;
+    // Reset progress so the bar animates through the HTTP call duration.
     setState(() {
-      _showWsErrorBanner = false;
       _stage = 0;
       _progress = 0;
-      _lastTraceDetail = '';
+      _lastTraceDetail = 'Switching to direct call…';
+      _httpErrorMessage = null;
     });
     ref.read(chatFlowPhaseProvider.notifier).state = ChatFlowPhase.processing;
     _startProgressBar();
@@ -297,27 +313,41 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
           query: query.isNotEmpty ? query : 'AC repair kar do',
           lat: 33.649,
           lng: 72.973,
+          sessionId: _sessionId,
         );
 
     if (!mounted) return;
 
     final ms = ref.read(matchingNotifierProvider);
     if (ms.error != null) {
-      // HTTP also failed — fall back to demo timer.
-      _fallbackToTimer();
+      // HTTP also failed — do NOT fall through to the fake timer.
+      // Show a real error in the pipeline panel instead.
+      _progressTimer?.cancel();
+      setState(() {
+        _httpErrorMessage =
+            'Could not reach backend. Check connection and retry.';
+        _progress = 0;
+      });
     } else {
+      // HTTP succeeded — advance UI to completion without any fake animation.
       _progressTimer?.cancel();
       setState(() {
         _stage = 4;
         _progress = 100;
+        _lastTraceDetail = '';
       });
       _routeOnAction(ms.coordinatorResult ?? {});
     }
   }
 
-  /// Timer-driven fake pipeline — only used when backend is definitively
-  /// offline ([backendOnlineProvider] == false).
+  /// Timer-driven demo pipeline — ONLY used when [backendOnlineProvider] is
+  /// false (i.e. backend was unreachable at startup).
+  ///
+  /// Never called when the backend is online, even if both WS and HTTP failed.
   void _fallbackToTimer() {
+    if (!mounted) return;
+    // Show a single-shot notice that we are in demo mode.
+    setState(() => _lastTraceDetail = 'Demo offline pipeline');
     Timer.periodic(AppDurations.agentStep, (t) {
       if (!mounted) {
         t.cancel();
@@ -348,30 +378,47 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── WS error banner (only when backend online + WS failed) ────
-              if (_showWsErrorBanner)
-                MaterialBanner(
+              // ── HTTP error banner (backend online, both WS + HTTP failed) ─
+              if (_httpErrorMessage != null)
+                Container(
+                  margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  content: const Text(
-                    'Live stream unavailable — switching to direct call',
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  leading: const Icon(Icons.wifi_off, color: AppColors.warning),
-                  backgroundColor:
-                      AppColors.warning.withValues(alpha: 0.12),
-                  actions: [
-                    TextButton(
-                      onPressed: _retryViaHttp,
-                      child: const Text('Retry'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        setState(() => _showWsErrorBanner = false);
-                        _fallbackToTimer();
-                      },
-                      child: const Text('Demo Mode'),
-                    ),
-                  ],
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline,
+                          color: AppColors.error, size: 18),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _httpErrorMessage!,
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textPrimary,
+                                  ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _httpErrorMessage = null;
+                            _stage = 0;
+                            _progress = 0;
+                            _lastTraceDetail = '';
+                          });
+                          _wsSub?.cancel();
+                          _wsClient?.disconnect();
+                          _startProgressBar();
+                          _connectWebSocket();
+                        },
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
                 ),
 
               // ── Greeting ─────────────────────────────────────────────────
@@ -478,7 +525,7 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
                                       _stage = 0;
                                       _progress = 0;
                                       _lastTraceDetail = '';
-                                      _showWsErrorBanner = false;
+                                      _httpErrorMessage = null;
                                     });
                                     ref
                                         .read(chatFlowPhaseProvider.notifier)
