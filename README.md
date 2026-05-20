@@ -195,35 +195,55 @@ The platform supports **3 languages simultaneously**:
 
 ## 8. How to Run
 
+> ⚠️ **Submission app:** `kaarigar_frontend/ai_seekho_flutter_frontend/`  
+> The folder `ai_seekho_flutter/` is a **legacy prototype** — it is **NOT** the submission app. Do not run it as the primary frontend.
+
 ### Backend
+
 ```bash
+# Windows PowerShell
 cd ai_seekho_backend
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Create .env from template
-cp .env.example .env
-# Add your GEMINI_API_KEY, MAPS_API_KEY, FIREBASE_CREDENTIALS_PATH
+# Create .env from template (Windows)
+copy .env.example .env
+# Linux/Mac: cp .env.example .env
+# Fill in: GEMINI_API_KEY, MAPS_API_KEY, FIREBASE_CREDENTIALS_PATH
 
-# Seed Firestore (optional)
+# Seed Firestore with provider profiles (optional but recommended)
 python data/seed_firestore.py
 
 # Start server
 uvicorn main:app --reload --port 8000
 
-# Verify
+# Verify backend is live
 curl http://localhost:8000/
-# → {"status": "online", "version": "2.0.0-agents"}
+# → {"status": "online", "app": "AI Seekho Engine", ...}
 ```
 
-### Flutter Frontend
+### KARIGAR Frontend — Android Emulator
+
 ```bash
-cd ai_seekho_flutter
+cd kaarigar_frontend/ai_seekho_flutter_frontend
+flutter pub get
+flutter run --dart-define=ANDROID_EMULATOR=true
+```
+
+The `--dart-define=ANDROID_EMULATOR=true` flag switches the backend host from `127.0.0.1:8000` to `10.0.2.2:8000` (Android emulator loopback). Omit the flag when running on a physical device or iOS simulator.
+
+### KARIGAR Frontend — Physical Device / iOS Simulator
+
+```bash
+cd kaarigar_frontend/ai_seekho_flutter_frontend
 flutter pub get
 flutter run
-# App starts at /home (demo mode)
 ```
+
+### Full architecture and API contract details
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ---
 
