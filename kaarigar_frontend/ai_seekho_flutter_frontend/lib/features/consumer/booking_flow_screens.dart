@@ -6,7 +6,9 @@ import '../../core/constants/app_colors.dart';
 import '../../core/network/api_service.dart';
 import '../../core/providers/app_providers.dart';
 import '../../features/matching/providers/matching_provider.dart';
+import '../../features/booking/providers/booking_provider.dart';
 import '../../models/provider_model.dart';
+import '../../models/quote_model.dart';
 import '../../routes/app_routes.dart';
 import '../../services/mock_data_service.dart';
 import '../../widgets/ai_orb_logo.dart';
@@ -68,6 +70,7 @@ class ProviderRankingScreen extends ConsumerWidget {
                   onReason: () => context.push(AppRoutes.reasoningPanel),
                   onBook: () {
                     ref.read(selectedProviderProvider.notifier).state = p;
+                    ref.read(matchingNotifierProvider.notifier).updateHandoffProvider(p);
                     context.push(AppRoutes.priceBreakdown);
                   },
                 );
@@ -337,36 +340,13 @@ class PriceBreakdownScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final provider = ref.watch(selectedProviderProvider) ?? MockDataService.providers.first;
-    final quote = ref.watch(matchingNotifierProvider).quote;
+    final quoteDisplay = QuoteDisplay.fromCoordinatorQuote(ref.watch(matchingNotifierProvider).quote);
 
-    // Parse real breakdown lines from coordinator quote, fall back to mock.
-    final List<(String, String, bool)> lines;
-    final String totalStr;
-    if (quote != null) {
-      final rawTotal = quote['total'] ?? quote['amount'] ?? quote['total_price'] ?? 930;
-      totalStr = '${quote['currency'] ?? 'PKR'} $rawTotal';
-      final breakdown = quote['breakdown'] as List<dynamic>?;
-      if (breakdown != null && breakdown.isNotEmpty) {
-        lines = breakdown.map<(String, String, bool)>((b) {
-          final label  = (b['label'] ?? b['item'] ?? '').toString();
-          final amount = (b['amount'] ?? b['value'] ?? 0);
-          final isDiscount = (b['is_discount'] as bool?) ?? amount < 0;
-          return (label, 'PKR $amount', isDiscount);
-        }).toList();
-      } else {
-        lines = [('Total', totalStr, false)];
-      }
-    } else {
-      totalStr = 'PKR 930';
-      lines = const [
-        ('Base service fee', 'PKR 500', false),
-        ('Visit fee',        'PKR 200', false),
-        ('Distance (3.2km)', 'PKR 160', false),
-        ('Urgency surcharge','PKR 100', false),
-        ('Complexity charge','PKR 50',  false),
-        ('Loyalty discount', 'PKR 80',  true),
-      ];
-    }
+    final lines = quoteDisplay.lines.isNotEmpty 
+        ? quoteDisplay.lines.map((l) => (l.label, 'PKR ${l.amount.toStringAsFixed(0)}', l.amount < 0)).toList() 
+        : [('Total', 'PKR ${quoteDisplay.totalPkr.toStringAsFixed(0)}', false)];
+    final totalStr = 'PKR ${quoteDisplay.totalPkr.toStringAsFixed(0)}';
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
@@ -412,11 +392,11 @@ class PriceBreakdownScreen extends ConsumerWidget {
                     );
                   }),
                   const Divider(),
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('TOTAL', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
-                      Text('PKR 930', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+                      const Text('TOTAL', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+                      Text(totalStr, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -467,6 +447,7 @@ class BookingConfirmedScreen extends ConsumerStatefulWidget {
 class _BookingConfirmedScreenState extends ConsumerState<BookingConfirmedScreen> {
   bool _isBooking = true;
   String? _bookingId;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -476,26 +457,46 @@ class _BookingConfirmedScreenState extends ConsumerState<BookingConfirmedScreen>
 
   Future<void> _executeBooking() async {
     final handoff = ref.read(matchingNotifierProvider).handoff;
-    try {
-      final result = await apiService.agentExecute(
-        handoff: handoff ?? {
-          'user_id': 'user_demo_001',
-          'provider_id': ref.read(selectedProviderProvider)?.id ?? 'p1',
-          'service_type': ref.read(selectedProviderProvider)?.service ?? 'AC Repair',
-          'scheduled_time': DateTime.now().add(const Duration(days: 1)).toIso8601String(),
-          'location_address': 'G-13, Islamabad',
-          'lat': 33.649,
-          'lng': 72.973,
-        },
-      );
+    if (handoff == null) {
       if (mounted) {
         setState(() {
           _isBooking = false;
-          _bookingId = (result['booking_id'] ?? result['id'] ?? 'BSK-${DateTime.now().millisecondsSinceEpoch}').toString();
+          _errorMessage = "Booking data missing. Go back and run search again.";
         });
       }
-    } catch (_) {
-      if (mounted) setState(() { _isBooking = false; _bookingId = 'BSK-${DateTime.now().millisecondsSinceEpoch}'; });
+      return;
+    }
+    
+    try {
+      final result = await apiService.agentExecute(handoff: handoff);
+      
+      if (mounted) {
+        if (result['status'] == 'success' || result['bid'] != null) {
+          ref.read(bookingNotifierProvider.notifier).loadBookings('user_demo_001');
+          setState(() {
+            _isBooking = false;
+            _bookingId = (result['bid'] ?? result['booking_id']).toString();
+            ref.read(selectedBookingIdProvider.notifier).state = _bookingId;
+          });
+        } else if (result['status'] == 'conflict') {
+          setState(() {
+            _isBooking = false;
+            _errorMessage = "Time slot conflict: ${result['suggested_slot'] ?? 'Please choose another time'}";
+          });
+        } else {
+          setState(() {
+            _isBooking = false;
+            _errorMessage = "Failed to create booking.";
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isBooking = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
   }
 
@@ -512,6 +513,30 @@ class _BookingConfirmedScreenState extends ConsumerState<BookingConfirmedScreen>
               SizedBox(height: 20),
               Text('Booking create ho rahi hai...', style: TextStyle(fontWeight: FontWeight.w600)),
             ],
+          ),
+        ),
+      );
+    }
+    if (_errorMessage != null) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                const SizedBox(height: 16),
+                Text(_errorMessage!, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.w600, fontSize: 16)),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    context.pop();
+                  },
+                  child: const Text('Retry Search'),
+                )
+              ],
+            ),
           ),
         ),
       );

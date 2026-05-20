@@ -177,6 +177,45 @@ class MatchingNotifier extends StateNotifier<MatchingState> {
     );
   }
 
+  void updateHandoffProvider(ServiceProvider selected) {
+    if (state.handoff == null) return;
+    
+    final handoffCopy = Map<String, dynamic>.from(state.handoff!);
+    final fullContext = handoffCopy['full_context'] != null 
+        ? Map<String, dynamic>.from(handoffCopy['full_context'] as Map) 
+        : <String, dynamic>{};
+        
+    fullContext['provider_id'] = selected.id;
+    
+    // Find raw provider from coordinatorResult if possible
+    final rawProviders = (state.coordinatorResult?['providers'] ?? 
+        state.coordinatorResult?['matching_providers'] ?? []) as List<dynamic>;
+        
+    Map<String, dynamic>? rawProviderMap;
+    for (var p in rawProviders) {
+      if (p['id'] == selected.id || p['provider_id'] == selected.id) {
+        rawProviderMap = p as Map<String, dynamic>;
+        break;
+      }
+    }
+    
+    if (rawProviderMap != null) {
+      fullContext['provider'] = rawProviderMap;
+    } else {
+      fullContext['provider'] = {
+        'id': selected.id,
+        'name': selected.name,
+        'service': selected.service,
+        'price': selected.price,
+      };
+    }
+    
+    handoffCopy['full_context'] = fullContext;
+    handoffCopy['provider_id'] = selected.id;
+    
+    state = state.copyWith(handoff: handoffCopy);
+  }
+
   void reset() => state = const MatchingState();
 }
 

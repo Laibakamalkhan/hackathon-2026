@@ -17,10 +17,10 @@ class Tutorial1Screen extends StatelessWidget {
       illustration: _FactorGridIllustration(),
       title: 'AI Dhundhega Best Option',
       subtitle: '8 factors se sab se behtar service provider choose kiya jata hai',
-      child: _FactorGrid(),
       onSkip: () => context.go(AppRoutes.roleSelect),
       onNext: () => context.go(AppRoutes.tutorial2),
       nextLabel: 'Agla →',
+      child: _FactorGrid(),
     );
   }
 }
@@ -35,11 +35,11 @@ class Tutorial2Screen extends StatelessWidget {
       illustration: _BookTrackIllustration(),
       title: 'Book, Track, Aur Rate!',
       subtitle: 'Confirmation, reminders, aur feedback — sab kuch automatic',
-      child: _StatusRow(),
       onSkip: () => context.go(AppRoutes.roleSelect),
       onNext: () => context.go(AppRoutes.roleSelect),
       nextLabel: 'Shuru Karein! 🚀',
       footer: 'KARIGAR mein khush amdeed!',
+      child: _StatusRow(),
     );
   }
 }
