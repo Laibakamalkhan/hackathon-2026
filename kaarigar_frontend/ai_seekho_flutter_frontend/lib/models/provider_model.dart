@@ -11,6 +11,7 @@ class ServiceProvider {
     required this.eta,
     this.verified = true,
     this.badges = const [],
+    this.rawJson = const {},
   });
 
   final String id;
@@ -24,6 +25,7 @@ class ServiceProvider {
   final String eta;
   final bool verified;
   final List<String> badges;
+  final Map<String, dynamic> rawJson;
 
   /// Maps a backend provider document (from /api/providers or coordinator
   /// response) to [ServiceProvider].
@@ -87,6 +89,7 @@ class ServiceProvider {
       eta: eta,
       verified: verified,
       badges: badges,
+      rawJson: json,
     );
   }
 }

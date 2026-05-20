@@ -434,6 +434,7 @@ def get_matching_providers(
         if score > 0:
             p_dict["match_score"] = score
             p_dict["match_factors"] = factors
+            p_dict["match_breakdown"] = factors
             p_dict["distance_km"] = distance
             p_dict["routing_tier"] = routing_tier
             scored_list.append(p_dict)

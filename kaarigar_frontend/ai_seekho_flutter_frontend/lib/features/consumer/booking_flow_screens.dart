@@ -214,21 +214,146 @@ class _ProviderRankingCard extends StatelessWidget {
   }
 }
 
-class ReasoningDrawerScreen extends StatelessWidget {
+class ReasoningDrawerScreen extends ConsumerWidget {
   const ReasoningDrawerScreen({super.key});
 
+  String _formatTimestamp(String timestampStr) {
+    try {
+      final dt = DateTime.parse(timestampStr);
+      final min = dt.minute.toString().padLeft(2, '0');
+      final sec = dt.second.toString().padLeft(2, '0');
+      final ms = dt.millisecond.toString().padLeft(3, '0');
+      return '${dt.hour}:$min:$sec.$ms';
+    } catch (_) {
+      return timestampStr;
+    }
+  }
+
+  Color _getColorForFactor(String key) {
+    final cleanKey = key.replaceAll('_pts', '').toLowerCase();
+    switch (cleanKey) {
+      case 'proximity':
+      case 'rating':
+      case 'sentiment':
+        return AppColors.accentLavender;
+      case 'availability':
+      case 'on_time':
+      case 'experience':
+      case 'specialization':
+      case 'cancellation':
+        return AppColors.success;
+      case 'price':
+        return AppColors.accentSand;
+      default:
+        return AppColors.accentLavender;
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
-    final factors = [
-      ('Distance', 75, AppColors.accentLavender),
-      ('Availability', 100, AppColors.success),
-      ('Rating', 88, AppColors.accentLavender),
-      ('On-Time', 96, AppColors.success),
-      ('Specialization', 95, AppColors.success),
-      ('Price Fit', 80, AppColors.accentSand),
-      ('Cancellations', 92, AppColors.success),
-      ('Reviews', 85, AppColors.accentLavender),
-    ];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final matchingState = ref.watch(matchingNotifierProvider);
+    final coordinatorResult = matchingState.coordinatorResult;
+    final traceEvents = coordinatorResult?['trace_events'] as List<dynamic>?;
+    
+    final provider = ref.watch(selectedProviderProvider);
+    final providerJson = provider?.rawJson ?? const {};
+    final breakdownRaw = providerJson['match_breakdown'] ?? providerJson['match_factors'] ?? providerJson['factor_scores'];
+    final breakdown = breakdownRaw is Map<String, dynamic> ? breakdownRaw : null;
+
+    final hasTrace = traceEvents != null && traceEvents.isNotEmpty;
+    final hasBreakdown = breakdown != null && breakdown.isNotEmpty;
+
+    if (!hasTrace && !hasBreakdown) {
+      return Scaffold(
+        backgroundColor: AppColors.darkBg,
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 8),
+              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)))),
+              const Spacer(),
+              const Icon(Icons.info_outline, size: 64, color: AppColors.darkTextSecondary),
+              const SizedBox(height: 16),
+              const Center(
+                child: Text(
+                  'Reasoning unavailable',
+                  style: TextStyle(color: AppColors.textOnDark, fontWeight: FontWeight.w800, fontSize: 20),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Center(
+                child: Text(
+                  'AI ne is decision ki explanation generate nahi ki.',
+                  style: TextStyle(color: AppColors.darkTextSecondary, fontSize: 14),
+                ),
+              ),
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: ElevatedButton.icon(
+                  onPressed: () => context.pop(),
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text('Wapas jayein', style: TextStyle(fontWeight: FontWeight.w800)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.bgSecondary,
+                    foregroundColor: AppColors.textPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final keyLabels = {
+      'proximity_pts': 'Distance',
+      'proximity': 'Distance',
+      'experience_pts': 'Experience',
+      'experience': 'Experience',
+      'on_time_pts': 'On-Time',
+      'on_time': 'On-Time',
+      'rating_pts': 'Rating',
+      'rating': 'Rating',
+      'availability_pts': 'Availability',
+      'availability': 'Availability',
+      'specialization_pts': 'Specialization',
+      'specialization': 'Specialization',
+      'price_pts': 'Price Fit',
+      'price': 'Price Fit',
+      'cancellation_pts': 'Cancellations',
+      'cancellation': 'Cancellations',
+      'sentiment_pts': 'Reviews',
+      'sentiment': 'Reviews',
+    };
+
+    final List<MapEntry<String, double>> factorItems = [];
+    if (breakdown != null) {
+      for (var entry in breakdown.entries) {
+        final val = entry.value;
+        if (val is num) {
+          if (entry.key == 'complexity_multiplier' || entry.key == 'match_score') {
+            continue;
+          }
+          factorItems.add(MapEntry(entry.key, val.toDouble()));
+        }
+      }
+    }
+
+    final iconMap = {
+      'think': Icons.psychology,
+      'act': Icons.play_arrow,
+      'observe': Icons.visibility_outlined,
+    };
+    final iconColorMap = {
+      'think': AppColors.accentLavender,
+      'act': AppColors.accentLavender,
+      'observe': AppColors.success,
+    };
+
     return Scaffold(
       backgroundColor: AppColors.darkBg,
       body: SafeArea(
@@ -242,8 +367,9 @@ class ReasoningDrawerScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('🤖 AI ne Ali ko kyun choose kiya?', style: TextStyle(color: AppColors.textOnDark, fontWeight: FontWeight.w800, fontSize: 18)),
-                  const Text('8 factor analysis', style: TextStyle(color: AppColors.darkTextSecondary, fontSize: 13)),
+                  Text('🤖 AI ne ${provider?.name ?? 'Provider'} ko kyun choose kiya?', style: const TextStyle(color: AppColors.textOnDark, fontWeight: FontWeight.w800, fontSize: 18)),
+                  if (factorItems.isNotEmpty)
+                    Text('${factorItems.length} factor analysis', style: const TextStyle(color: AppColors.darkTextSecondary, fontSize: 13)),
                 ],
               ),
             ),
@@ -251,12 +377,32 @@ class ReasoningDrawerScreen extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 children: [
-                  _agentCard('IntentAgent', '[342ms]', '"AC bilkul kaam nahi" -> AC Repair (94%)'),
-                  _agentCard('MatchingAgent', '[611ms]', '8 providers scanned in G-13 — Ali ranked #1'),
-                  _agentCard('Wajah:', '', '• Ali AC specialist — +12 pts\n• On-time: Ali 96% vs Hassan 71%\n• Budget discount — PKR 880 final', warning: 'Hassan 1km closer lekin on-time weak'),
-                  const Text('Score Breakdown', style: TextStyle(color: AppColors.textOnDark, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 12),
-                  ...factors.map((f) => Padding(
+                  if (hasTrace) ...[
+                    ...traceEvents.map((event) {
+                      final type = event['type']?.toString().toLowerCase() ?? 'think';
+                      final content = event['content']?.toString() ?? '';
+                      final timestamp = event['timestamp']?.toString() ?? '';
+                      final icon = iconMap[type] ?? Icons.info_outline;
+                      final iconColor = iconColorMap[type] ?? AppColors.accentLavender;
+                      final title = type.toUpperCase();
+                      
+                      return _agentCard(
+                        icon: icon,
+                        iconColor: iconColor,
+                        title: title,
+                        meta: timestamp.isNotEmpty ? _formatTimestamp(timestamp) : '',
+                        body: content,
+                      );
+                    }),
+                    const SizedBox(height: 12),
+                  ],
+                  if (hasBreakdown) ...[
+                    const Text('Score Breakdown', style: TextStyle(color: AppColors.textOnDark, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 12),
+                    ...factorItems.map((f) {
+                      final label = keyLabels[f.key] ?? f.key.replaceAll('_pts', '').replaceAll('_', ' ').toUpperCase();
+                      final color = _getColorForFactor(f.key);
+                      return Padding(
                         padding: const EdgeInsets.only(bottom: 10),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,18 +410,25 @@ class ReasoningDrawerScreen extends StatelessWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(f.$1, style: const TextStyle(color: AppColors.textOnDark, fontSize: 13)),
-                                Text('${f.$2}%', style: const TextStyle(color: AppColors.textOnDark, fontWeight: FontWeight.w700)),
+                                Text(label, style: const TextStyle(color: AppColors.textOnDark, fontSize: 13)),
+                                Text('${f.value.round()}%', style: const TextStyle(color: AppColors.textOnDark, fontWeight: FontWeight.w700)),
                               ],
                             ),
                             const SizedBox(height: 4),
                             ClipRRect(
                               borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(value: f.$2 / 100, color: f.$3, backgroundColor: Colors.white10, minHeight: 6),
+                              child: LinearProgressIndicator(
+                                value: f.value / 100.0,
+                                color: color,
+                                backgroundColor: Colors.white10,
+                                minHeight: 6,
+                              ),
                             ),
                           ],
                         ),
-                      )),
+                      );
+                    }),
+                  ],
                 ],
               ),
             ),
@@ -299,7 +452,14 @@ class ReasoningDrawerScreen extends StatelessWidget {
     );
   }
 
-  static Widget _agentCard(String title, String meta, String body, {String? warning}) {
+  static Widget _agentCard({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String meta,
+    required String body,
+    String? warning,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -313,7 +473,7 @@ class ReasoningDrawerScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.check_circle, color: AppColors.success, size: 18),
+              Icon(icon, color: iconColor, size: 18),
               const SizedBox(width: 8),
               Text(title, style: const TextStyle(color: AppColors.textOnDark, fontWeight: FontWeight.w700)),
               const Spacer(),
