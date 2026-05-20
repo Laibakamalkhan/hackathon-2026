@@ -66,10 +66,19 @@ class ServiceProvider {
     final rawBadges = json['badges'] as List<dynamic>? ?? const [];
     final badges = rawBadges.map((b) => b.toString()).toList();
 
+    final id = (json['pid'] ?? json['id'] ?? json['provider_id'] ?? '').toString();
+
+    final name = (json['name'] ?? json['provider_name'] ?? 'Unknown').toString();
+
+    final categories = json['service_categories'];
+    final service = (categories is List && categories.isNotEmpty)
+        ? categories[0].toString()
+        : (json['service'] ?? json['service_type'] ?? 'Service').toString();
+
     return ServiceProvider(
-      id: (json['id'] ?? json['provider_id'] ?? '').toString(),
-      name: (json['name'] ?? json['provider_name'] ?? 'Unknown').toString(),
-      service: (json['service'] ?? json['service_type'] ?? 'Service').toString(),
+      id: id,
+      name: name,
+      service: service,
       rating: rating,
       reviews: reviews,
       distance: distance,
