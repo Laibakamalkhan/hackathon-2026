@@ -57,6 +57,53 @@ class CoordinatorAgent:
     def _now_iso(self) -> str:
         return datetime.now().isoformat()
 
+    def _build_execute_handoff(
+        self,
+        state: "CoordinatorState",
+        top_provider: Dict[str, Any],
+        parsed_intent: Dict[str, Any],
+        quote: Optional[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        """Build AgentHandoff for ExecutorAgent when providers are shown.
+
+        Always produces a valid handoff so ExecutorAgent can create a real booking
+        as soon as the user confirms, without a second coordinate round-trip.
+
+        scheduled_time: first availability_slot of top_provider, or tomorrow at 10:00 local.
+        """
+        from datetime import timedelta
+
+        tomorrow_10 = (
+            datetime.now() + timedelta(days=1)
+        ).replace(hour=10, minute=0, second=0, microsecond=0).isoformat()
+
+        slots = top_provider.get("availability_slots") or []
+        scheduled_time = slots[0] if slots else tomorrow_10
+
+        handoff = AgentHandoff(
+            from_agent="CoordinatorAgent",
+            to_agent="ExecutorAgent",
+            reason="providers_ready_for_user_confirmation",
+            full_context={
+                "provider_id": top_provider.get("pid"),
+                "provider": top_provider,
+                "parsed_intent": parsed_intent,
+                "user_lat": state.user_lat,
+                "user_lng": state.user_lng,
+                "lat": state.user_lat,
+                "lng": state.user_lng,
+                "session_id": state.session_id,
+                "scheduled_time": scheduled_time,
+                "service_type": parsed_intent.get("service_type", "general_home"),
+                "user_id": parsed_intent.get("user_id", "user_demo_001"),
+                "location_address": parsed_intent.get("location_mention", ""),
+                "distance_km": top_provider.get("distance_km", 0.0),
+                "price_quote": quote,
+            },
+            urgency=parsed_intent.get("urgency", "standard"),
+        )
+        return handoff.model_dump()
+
     def _trace(self, event_type: str, content: str) -> Dict[str, Any]:
         return {"type": event_type, "content": content, "timestamp": self._now_iso()}
 
@@ -91,11 +138,16 @@ class CoordinatorAgent:
             }
 
         trace_events.append(self._trace("act", "search_providers_tool"))
-        providers = execute_tool("search_providers_tool", {
+        providers_raw = execute_tool("search_providers_tool", {
             "user_lat": state.user_lat, "user_lng": state.user_lng,
             "parsed_intent": intent, "limit": 5
         })
-        if isinstance(providers, dict):
+        # execute_tool wraps non-dict returns as {"result": value}
+        if isinstance(providers_raw, list):
+            providers = providers_raw
+        elif isinstance(providers_raw, dict) and "result" in providers_raw:
+            providers = providers_raw["result"] if isinstance(providers_raw["result"], list) else []
+        else:
             providers = []
         trace_events.append(self._trace("observe", f"Found {len(providers)} providers."))
 
@@ -142,7 +194,7 @@ class CoordinatorAgent:
                 "confidence": confidence, "extracted_fields": intent,
                 "shortlisted_providers": providers, "current_step": "show_providers"
             }),
-            "handoff": None
+            "handoff": self._build_execute_handoff(state, top, intent, quote)
         }
 
     def run(self, state: CoordinatorState) -> Dict[str, Any]:
@@ -246,7 +298,13 @@ class CoordinatorAgent:
                             f"Confidence={confidence:.2f}. "
                             f"{'Ask clarification.' if confidence < 0.70 else 'Proceeding to search.'}"))
                     elif tool_name == "search_providers_tool":
-                        providers_result = tool_result if isinstance(tool_result, list) else []
+                        # execute_tool wraps non-dict returns as {"result": value}
+                        if isinstance(tool_result, list):
+                            providers_result = tool_result
+                        elif isinstance(tool_result, dict) and "result" in tool_result:
+                            providers_result = tool_result["result"] if isinstance(tool_result["result"], list) else []
+                        else:
+                            providers_result = []
                     elif tool_name == "generate_price_quote_tool":
                         quote_result = tool_result
 
@@ -286,9 +344,9 @@ class CoordinatorAgent:
                     "handoff": None
                 }
 
-            if providers_result is not None:
+            if providers_result is not None and providers_result and providers_result[0].get("pid"):
                 svc = (intent_result or {}).get("service_type", "service").replace("_", " ").title()
-                top = providers_result[0] if providers_result else {}
+                top = providers_result[0]
                 message = (
                     f"Humne {len(providers_result)} {svc} providers dhoondhe! "
                     f"Sab se behtar {top.get('name', 'Provider')} "
@@ -300,6 +358,7 @@ class CoordinatorAgent:
                     f"Best: {top.get('name', 'Provider')} "
                     f"({top.get('distance_km', 0):.1f}km, {top.get('rating', 4.0):.1f}★). Confirm?"
                 )
+                effective_intent = intent_result or state.extracted_fields
                 return {
                     "action": "show_providers",
                     "message": message, "message_en": message_en,
@@ -307,11 +366,13 @@ class CoordinatorAgent:
                     "trace_events": trace_events, "confidence": confidence,
                     "updated_state": state.model_copy(update={
                         "confidence": confidence,
-                        "extracted_fields": intent_result or state.extracted_fields,
+                        "extracted_fields": effective_intent,
                         "shortlisted_providers": providers_result,
                         "current_step": "show_providers"
                     }),
-                    "handoff": None
+                    "handoff": self._build_execute_handoff(
+                        state, top, effective_intent, quote_result
+                    )
                 }
 
             # No clear result — fallback

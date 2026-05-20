@@ -630,6 +630,7 @@ async def websocket_agent_stream(websocket: WebSocket):
                     })
 
                 # Final completed event with full result
+                updated_state = result.get("updated_state")
                 await websocket.send_json({
                     "event": "completed",
                     "content": result.get("message", ""),
@@ -637,6 +638,13 @@ async def websocket_agent_stream(websocket: WebSocket):
                     "confidence": result.get("confidence", 0.0),
                     "providers": result.get("providers"),
                     "quote": result.get("quote"),
+                    "handoff": result.get("handoff"),
+                    "extracted_fields": (
+                        updated_state.extracted_fields
+                        if updated_state and hasattr(updated_state, "extracted_fields")
+                        else {}
+                    ),
+                    "trace_events": result.get("trace_events", []),
                     "timestamp": datetime.now().isoformat()
                 })
 
