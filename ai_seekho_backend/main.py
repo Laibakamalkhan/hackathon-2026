@@ -473,19 +473,43 @@ async def agent_resolve(req: ResolveDisputeRequest):
     Runs the GuardianAgent: resolves the dispute using Gemini reasoning + deterministic
     refund table. Escalates to human if refund > PKR 2000 or manager requested.
     """
+    mapping = {
+        "poor service": "quality",
+        "poor_service": "quality",
+        "poorservice": "quality",
+        "other": "quality",
+        "quality": "quality",
+        "no show": "no_show",
+        "no_show": "no_show",
+        "noshow": "no_show",
+        "overcharged": "price",
+        "price": "price",
+        "overrun": "overrun",
+        "cancellation": "cancellation"
+    }
+    normalized_type = mapping.get(req.dispute_type.strip().lower(), req.dispute_type.strip())
+    allowed_types = ["no_show", "quality", "price", "overrun", "cancellation"]
+    if normalized_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid dispute_type '{req.dispute_type}'. Must be one of: {', '.join(allowed_types)}"
+        )
     try:
         dispute_id = f"DS-{uuid.uuid4().hex[:6].upper()}"
         guardian = _get_guardian()
         result = guardian.resolve_dispute(
             dispute_id=dispute_id,
             booking_id=req.booking_id,
-            dispute_type=req.dispute_type,
+            dispute_type=normalized_type,
             description=req.description
         )
         return result
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"agent_resolve error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"GuardianAgent error: {str(e)}")
+
 
 
 @app.post("/api/v1/feedback/submit")

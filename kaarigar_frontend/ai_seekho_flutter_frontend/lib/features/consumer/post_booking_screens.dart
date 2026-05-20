@@ -8,8 +8,10 @@ import '../../core/network/api_service.dart';
 import '../../core/providers/app_providers.dart';
 import '../../features/booking/providers/booking_provider.dart';
 import '../../features/dispute/providers/dispute_provider.dart';
+import '../../core/constants/dispute_types.dart';
 import '../../models/booking_model.dart';
 import '../../routes/app_routes.dart';
+
 import '../../widgets/consumer_bottom_nav.dart';
 import '../../widgets/decorative_background.dart';
 import '../../widgets/glass_card.dart';
@@ -657,8 +659,17 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
   }
 
   Future<void> _submit() async {
+    final bookingId = ref.read(selectedBookingIdProvider);
+    if (bookingId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error: No active booking selected for feedback submission.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
     setState(() => _isSubmitting = true);
-    final bookingId = ref.read(selectedBookingIdProvider) ?? 'BSK-2024-1821';
     try {
       await apiService.submitFeedback(
         bookingId: bookingId,
@@ -791,10 +802,9 @@ class DisputeScreen extends ConsumerStatefulWidget {
 }
 
 class _DisputeScreenState extends ConsumerState<DisputeScreen> {
-  String _selectedType = 'Poor service';
+  DisputeTypeUi _selectedType = DisputeTypeUi.poorService;
   bool _isSubmitting = false;
   final _descController = TextEditingController();
-  static const _issueTypes = ['Poor service', 'No show', 'Overcharged', 'Other'];
 
   @override
   void dispose() {
@@ -815,7 +825,7 @@ class _DisputeScreenState extends ConsumerState<DisputeScreen> {
     if (mounted) context.push(AppRoutes.disputeResolving);
     await ref.read(disputeNotifierProvider.notifier).resolve(
       bookingId: bookingId,
-      disputeType: _selectedType,
+      disputeType: _selectedType.apiValue,
       description: _descController.text.trim(),
     );
     if (mounted) setState(() => _isSubmitting = false);
@@ -834,8 +844,8 @@ class _DisputeScreenState extends ConsumerState<DisputeScreen> {
               const Text('Issue type'),
               Wrap(
                 spacing: 8,
-                children: _issueTypes.map((t) => ChoiceChip(
-                  label: Text(t),
+                children: DisputeTypeUi.values.map((t) => ChoiceChip(
+                  label: Text(t.label),
                   selected: _selectedType == t,
                   onSelected: (_) => setState(() => _selectedType = t),
                 )).toList(),
@@ -849,7 +859,11 @@ class _DisputeScreenState extends ConsumerState<DisputeScreen> {
               ),
               const SizedBox(height: 20),
               OutlinedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Evidence upload coming soon')),
+                  );
+                },
                 icon: const Icon(Icons.upload),
                 label: const Text('Upload evidence'),
               ),
@@ -870,12 +884,70 @@ class DisputeResolutionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final resolution = ref.watch(disputeNotifierProvider).resolution;
-    final type = resolution?['resolution_type']?.toString() ?? 'partial_refund';
-    final amount = resolution?['refund_amount'];
-    final explanation = resolution?['explanation']?.toString()
-        ?? 'Based on evidence, a partial refund has been approved. Provider has been notified.';
-    final summary = amount != null ? 'PKR $amount refund approved.\n\n$explanation' : explanation;
+    final disputeState = ref.watch(disputeNotifierProvider);
+    final resolution = disputeState.resolution;
+    final error = disputeState.error;
+
+    if (resolution == null) {
+      final errorMsg = error ?? 'Dispute resolution data is not available.';
+      return Scaffold(
+        appBar: AppBar(title: const Text('Resolution Error')),
+        body: DecorativeBackground(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: AppColors.error),
+                const SizedBox(height: 16),
+                Text('Resolution Failed', style: Theme.of(context).textTheme.headlineMedium),
+                const SizedBox(height: 16),
+                GlassCard(
+                  child: Text(
+                    errorMsg,
+                    style: const TextStyle(color: AppColors.error, height: 1.5, fontWeight: FontWeight.w600),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const Spacer(),
+                if (disputeState.lastBookingId != null)
+                  PrimaryButton(
+                    label: 'Retry',
+                    onPressed: () {
+                      final notifier = ref.read(disputeNotifierProvider.notifier);
+                      context.go(AppRoutes.disputeResolving);
+                      notifier.resolve(
+                        bookingId: disputeState.lastBookingId!,
+                        disputeType: disputeState.lastDisputeType!,
+                        description: disputeState.lastDescription!,
+                        userId: disputeState.lastUserId ?? 'user_demo_001',
+                      );
+                    },
+                  ),
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  onPressed: () => context.go(AppRoutes.bookings),
+                  child: const Text('Go to Bookings'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final resObj = resolution['resolution'] as Map<String, dynamic>?;
+    final type = resObj?['type']?.toString() ?? 'none';
+    final amount = resObj?['amount_pkr'];
+    final explanation = resolution['user_message_en']?.toString() ??
+        resolution['user_message_urdu']?.toString() ??
+        resObj?['reasoning']?.toString() ??
+        'No explanation provided.';
+    
+    final isEscalated = resolution['escalation_needed'] == true;
+    final summary = amount != null && amount > 0 
+        ? 'PKR $amount refund approved.\n\n$explanation' 
+        : explanation;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Resolution')),
@@ -884,28 +956,52 @@ class DisputeResolutionScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              const Icon(Icons.gavel, size: 64, color: AppColors.accentLavender),
+              Icon(
+                isEscalated ? Icons.assignment_late_outlined : Icons.gavel,
+                size: 64,
+                color: isEscalated ? AppColors.warning : AppColors.accentLavender,
+              ),
               const SizedBox(height: 16),
-              Text('AI Resolution', style: Theme.of(context).textTheme.headlineMedium),
+              Text(
+                isEscalated ? 'Manager Escalation' : 'AI Resolution',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.2),
+                  color: (isEscalated ? AppColors.warning : AppColors.success).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(_label(type),
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.success)),
+                child: Text(
+                  _label(type, isEscalated),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: isEscalated ? AppColors.textPrimary : AppColors.success,
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
               GlassCard(child: Text(summary, style: const TextStyle(height: 1.5))),
               const Spacer(),
               PrimaryButton(
                 label: 'Accept Resolution',
-                onPressed: () => context.go(AppRoutes.bookings),
+                onPressed: () {
+                  ref.read(disputeNotifierProvider.notifier).reset();
+                  // Re-fetch bookings after resolution accepts
+                  ref.read(bookingNotifierProvider.notifier).loadBookings('user_demo_001');
+                  context.go(AppRoutes.bookings);
+                },
               ),
               const SizedBox(height: 12),
-              OutlinedButton(onPressed: () {}, child: const Text('Request Human Review')),
+              OutlinedButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Support request submitted. A manager will contact you soon.')),
+                  );
+                },
+                child: const Text('Request Human Review'),
+              ),
             ],
           ),
         ),
@@ -913,12 +1009,15 @@ class DisputeResolutionScreen extends ConsumerWidget {
     );
   }
 
-  static String _label(String t) {
+  static String _label(String t, bool isEscalated) {
+    if (isEscalated) return '⚠️ Escalated to Manager';
     switch (t.toLowerCase()) {
-      case 'full_refund':    return '✓ Full Refund Approved';
-      case 'partial_refund': return '✓ Partial Refund Approved';
-      case 'no_refund':      return 'No Refund — Case Closed';
-      default:               return 'Resolution: $t';
+      case 'refund':       return '✓ Refund Approved';
+      case 'compensation': return '✓ Compensation Approved';
+      case 'rebook':       return '✓ Rebooking Scheduled';
+      case 'warning':      return '✓ Provider Warned';
+      case 'none':         return 'No Action Required';
+      default:             return 'Resolution: ${t.toUpperCase()}';
     }
   }
 }
@@ -937,14 +1036,13 @@ class _DisputeResolvingScreenState extends ConsumerState<DisputeResolvingScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // If resolve() already finished before we got here, navigate now.
-      if (ref.read(disputeNotifierProvider).resolution != null && mounted) {
+      final current = ref.read(disputeNotifierProvider);
+      if ((current.resolution != null || current.error != null) && mounted) {
         context.go(AppRoutes.disputeResolution);
         return;
       }
-      // Otherwise watch for the resolution to arrive.
       _sub = ref.listenManual(disputeNotifierProvider, (_, next) {
-        if (next.resolution != null && mounted) {
+        if ((next.resolution != null || next.error != null) && mounted) {
           context.go(AppRoutes.disputeResolution);
         }
       });
@@ -983,3 +1081,4 @@ class _DisputeResolvingScreenState extends ConsumerState<DisputeResolvingScreen>
     );
   }
 }
+
