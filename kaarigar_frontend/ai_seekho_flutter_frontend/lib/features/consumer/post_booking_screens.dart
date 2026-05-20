@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -358,18 +361,102 @@ void _navConsumer(BuildContext context, ConsumerTab tab) {
   }
 }
 
-class LiveTrackingScreen extends StatelessWidget {
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Status → timeline step mapping
+// ─────────────────────────────────────────────────────────────────────────────
+// | API status           | Step index | Timeline label       |
+// |----------------------|------------|----------------------|
+// | pending / confirmed  |     0      | Booking Confirmed    |
+// | en_route             |     2      | On the Way (active)  |
+// | in_progress          |     4      | Work in Progress     |
+// | completed            |     5      | Completed (all done) |
+// | cancelled            |    -1      | (navigates away)     |
+// ─────────────────────────────────────────────────────────────────────────────
+
+class LiveTrackingScreen extends ConsumerStatefulWidget {
   const LiveTrackingScreen({super.key});
 
   @override
+  ConsumerState<LiveTrackingScreen> createState() => _LiveTrackingScreenState();
+}
+
+class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
+  Timer? _pollTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _startPolling());
+  }
+
+  void _startPolling() {
+    final bid = ref.read(selectedBookingIdProvider);
+    if (bid == null || !mounted) return;
+    // Immediate fetch on enter.
+    ref.read(bookingNotifierProvider.notifier).fetchBooking(bid);
+    // Then every 10 s while mounted.
+    _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted) ref.read(bookingNotifierProvider.notifier).fetchBooking(bid);
+    });
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Maps raw API status string → 0-based active step index.
+  int _activeStep(String raw) => switch (raw.toLowerCase()) {
+        'en_route'    => 2,
+        'in_progress' => 4,
+        'completed'   => 5,
+        _             => 0, // pending / confirmed
+      };
+
+  String _headerTitle(String raw) => switch (raw.toLowerCase()) {
+        'en_route'    => 'Provider arriving in',
+        'in_progress' => 'Work in Progress',
+        'completed'   => 'Booking Completed',
+        _             => 'Status',
+      };
+
+  String _headerValue(String raw) => switch (raw.toLowerCase()) {
+        'en_route'    => '~17 min',
+        'in_progress' => '🔧 Active',
+        'completed'   => '✓ Done',
+        'confirmed'   => 'Confirmed',
+        _             => raw,
+      };
+
+  @override
   Widget build(BuildContext context) {
-    final steps = [
-      ('Booking Confirmed', '10:32 AM', '✓ Completed', true, false, AppColors.success),
-      ('Provider Preparing', '9:45 AM', '✓ Completed', true, false, AppColors.accentLavender),
-      ('On the Way', '9:58 AM', 'Ali is on the way to your location...', true, true, AppColors.warning),
-      ('Arrived', 'ETA 10:15 AM', '', false, false, AppColors.textSecondary),
-      ('Work in Progress', '', '', false, false, AppColors.textSecondary),
-      ('Completed', '', '', false, false, AppColors.textSecondary),
+    final bid = ref.watch(selectedBookingIdProvider);
+    final bookingState = ref.watch(bookingNotifierProvider);
+
+    // Find the booking; fall back to first if bid not matched.
+    final booking = bid != null
+        ? bookingState.bookings.cast<Booking?>().firstWhere(
+            (b) => b?.id == bid,
+            orElse: () => bookingState.bookings.isNotEmpty ? bookingState.bookings.first : null,
+          )
+        : (bookingState.bookings.isNotEmpty ? bookingState.bookings.first : null);
+
+    final rawStatus = booking?.apiStatusRaw.isNotEmpty == true
+        ? booking!.apiStatusRaw
+        : 'confirmed';
+    final activeStep = _activeStep(rawStatus);
+    final isEnRoute = rawStatus.toLowerCase() == 'en_route';
+    final isCompleted = rawStatus.toLowerCase() == 'completed';
+
+    const stepLabels = [
+      'Booking Confirmed',
+      'Provider Preparing',
+      'On the Way',
+      'Arrived',
+      'Work in Progress',
+      'Completed',
     ];
 
     return Scaffold(
@@ -381,12 +468,17 @@ class LiveTrackingScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
           children: [
+            // ── Status header card ──────────────────────────────────────────
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
                 gradient: LinearGradient(
-                  colors: [AppColors.warning.withValues(alpha: 0.35), AppColors.success.withValues(alpha: 0.45)],
+                  colors: isCompleted
+                      ? [AppColors.success.withValues(alpha: 0.45), AppColors.success.withValues(alpha: 0.25)]
+                      : isEnRoute
+                          ? [AppColors.warning.withValues(alpha: 0.35), AppColors.success.withValues(alpha: 0.45)]
+                          : [AppColors.accentLavender.withValues(alpha: 0.35), AppColors.accentSand.withValues(alpha: 0.35)],
                 ),
               ),
               child: Row(
@@ -395,28 +487,45 @@ class LiveTrackingScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Provider arriving in', style: Theme.of(context).textTheme.bodySmall),
-                        const Text('17 min', style: TextStyle(fontSize: 36, fontWeight: FontWeight.w800)),
+                        Text(_headerTitle(rawStatus), style: Theme.of(context).textTheme.bodySmall),
+                        Text(
+                          _headerValue(rawStatus),
+                          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800),
+                        ),
                       ],
                     ),
                   ),
                   Container(
                     padding: const EdgeInsets.all(14),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: LinearGradient(colors: [AppColors.success, Color(0xFF7ED4B8)]),
+                      gradient: LinearGradient(
+                        colors: isCompleted
+                            ? [AppColors.success, const Color(0xFF7ED4B8)]
+                            : isEnRoute
+                                ? [AppColors.success, const Color(0xFF7ED4B8)]
+                                : [AppColors.accentLavender, const Color(0xFFB8C6DB)],
+                      ),
                     ),
-                    child: const Icon(Icons.navigation_outlined, color: Colors.white),
+                    child: Icon(
+                      isCompleted ? Icons.check_circle_outline : Icons.navigation_outlined,
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 20),
-            ...steps.asMap().entries.map((e) {
+            // ── Dynamic timeline ────────────────────────────────────────────
+            ...stepLabels.asMap().entries.map((e) {
               final i = e.key;
-              final s = e.value;
-              final done = s.$4;
-              final active = s.$5;
+              final label = e.value;
+              final done = i <= activeStep;
+              final active = i == activeStep && !isCompleted;
+              final dotColor = done
+                  ? (active ? AppColors.warning : AppColors.success)
+                  : AppColors.textSecondary;
+
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Row(
@@ -429,15 +538,17 @@ class LiveTrackingScreen extends StatelessWidget {
                           height: 28,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: done ? s.$6.withValues(alpha: active ? 1 : 0.9) : AppColors.textSecondary.withValues(alpha: 0.2),
+                            color: done
+                                ? dotColor.withValues(alpha: 0.9)
+                                : AppColors.textSecondary.withValues(alpha: 0.2),
                           ),
                           child: Icon(
-                            active ? Icons.hourglass_top : Icons.check,
+                            isCompleted ? Icons.check : (active ? Icons.hourglass_top : Icons.check),
                             size: 16,
                             color: done ? AppColors.textPrimary : AppColors.textSecondary,
                           ),
                         ),
-                        if (i < steps.length - 1)
+                        if (i < stepLabels.length - 1)
                           Container(width: 2, height: 48, color: AppColors.textSecondary.withValues(alpha: 0.2)),
                       ],
                     ),
@@ -453,21 +564,22 @@ class LiveTrackingScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(s.$1, style: const TextStyle(fontWeight: FontWeight.w800)),
-                                if (s.$2.isNotEmpty) Text(s.$2, style: Theme.of(context).textTheme.bodySmall),
-                              ],
-                            ),
-                            if (s.$3.isNotEmpty)
-                              Text(
-                                s.$3,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: active ? AppColors.warning : AppColors.success,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                            Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
+                            // Show contextual subtitle only for the active step.
+                            if (active && isEnRoute)
+                              const Text(
+                                'Provider is on the way to your location...',
+                                style: TextStyle(fontSize: 12, color: AppColors.warning, fontWeight: FontWeight.w600),
+                              )
+                            else if (active && rawStatus.toLowerCase() == 'in_progress')
+                              const Text(
+                                'Provider is working on your request.',
+                                style: TextStyle(fontSize: 12, color: AppColors.accentLavender, fontWeight: FontWeight.w600),
+                              )
+                            else if (active)
+                              const Text(
+                                '✓ Booking confirmed — awaiting provider.',
+                                style: TextStyle(fontSize: 12, color: AppColors.success, fontWeight: FontWeight.w600),
                               ),
                           ],
                         ),
@@ -478,12 +590,10 @@ class LiveTrackingScreen extends StatelessWidget {
               );
             }),
             const SizedBox(height: 8),
+            // ── AI Monitoring card ──────────────────────────────────────────
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.darkBg,
-                borderRadius: BorderRadius.circular(20),
-              ),
+              decoration: BoxDecoration(color: AppColors.darkBg, borderRadius: BorderRadius.circular(20)),
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -497,6 +607,7 @@ class LiveTrackingScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+            // ── Action buttons ──────────────────────────────────────────────
             Row(
               children: [
                 Expanded(
@@ -528,7 +639,12 @@ class LiveTrackingScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             OutlinedButton(
-              onPressed: () => context.go(AppRoutes.bookings),
+              onPressed: () async {
+                if (bid != null) {
+                  await ref.read(bookingNotifierProvider.notifier).updateStatus(bid, 'cancelled');
+                }
+                if (context.mounted) context.go(AppRoutes.bookings);
+              },
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: AppColors.error),
                 minimumSize: const Size.fromHeight(48),
@@ -536,12 +652,40 @@ class LiveTrackingScreen extends StatelessWidget {
               ),
               child: const Text('Cancel Booking', style: TextStyle(color: AppColors.error)),
             ),
+            // ── [DEBUG] Simulate en_route ───────────────────────────────────
+            if (kDebugMode && bid != null) ...[
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  await ref.read(bookingNotifierProvider.notifier).updateStatus(bid, 'en_route');
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('🚗 [DEBUG] Status set to en_route'),
+                        backgroundColor: AppColors.warning,
+                      ),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.bug_report_outlined),
+                label: const Text('[DEBUG] Simulate en_route'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.warning.withValues(alpha: 0.75),
+                  foregroundColor: AppColors.textPrimary,
+                  minimumSize: const Size.fromHeight(44),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 }
+
+
+
 
 class BookingDetailScreen extends ConsumerStatefulWidget {
   const BookingDetailScreen({super.key});
@@ -553,21 +697,61 @@ class BookingDetailScreen extends ConsumerStatefulWidget {
 class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
   bool _showCancel = false;
 
+  /// Opens a date + time picker, then PATCHes status to 'confirmed'
+  /// as a lightweight reschedule signal until Phase 4 adds a proper endpoint.
+  Future<void> _showRescheduleSheet(BuildContext ctx, String bid) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: ctx,
+      initialDate: now.add(const Duration(days: 1)),
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 60)),
+    );
+    if (picked == null || !ctx.mounted) return;
+    final time = await showTimePicker(
+      context: ctx,
+      initialTime: TimeOfDay.fromDateTime(now),
+    );
+    if (time == null || !ctx.mounted) return;
+    final scheduled = DateTime(
+      picked.year, picked.month, picked.day, time.hour, time.minute,
+    );
+    final iso = '${scheduled.toUtc().toIso8601String().substring(0, 16)}Z';
+    // PATCH status to keep booking active; full reschedule API is Phase 4.
+    await ref.read(bookingNotifierProvider.notifier).updateStatus(bid, 'confirmed');
+    if (ctx.mounted) {
+      ScaffoldMessenger.of(ctx).showSnackBar(
+        SnackBar(
+          content: Text('✓ Rescheduled to $iso (UTC)'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final id = ref.watch(selectedBookingIdProvider) ?? 'BSK-2024-1821';
-    // Prefer real API data; fall back to mock list if not yet loaded.
     final allBookings = ref.watch(bookingNotifierProvider).bookings;
-    final mockBookings = ref.watch(bookingsProvider);
+    // Use only real API data; show loader when list is empty.
     final booking = allBookings.isNotEmpty
         ? allBookings.firstWhere(
             (b) => b.id == id,
             orElse: () => allBookings.first,
           )
-        : mockBookings.firstWhere(
-            (b) => b.id == id,
-            orElse: () => mockBookings.first,
-          );
+        : null;
+
+    if (booking == null) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
+          title: const Text('Booking Detail'),
+        ),
+        body: const DecorativeBackground(
+          child: Center(child: CircularProgressIndicator(color: AppColors.accentLavender)),
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
@@ -625,7 +809,14 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
               else ...[
                 PrimaryButton(label: 'Track Live', onPressed: () => context.push(AppRoutes.liveTracking)),
                 const SizedBox(height: 12),
-                OutlinedButton(onPressed: () {}, child: const Text('Reschedule')),
+                OutlinedButton(
+                  onPressed: () => _showRescheduleSheet(context, id),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                  ),
+                  child: const Text('Reschedule'),
+                ),
                 const SizedBox(height: 12),
                 TextButton(
                   onPressed: () => setState(() => _showCancel = true),

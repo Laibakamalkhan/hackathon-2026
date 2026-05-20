@@ -15,6 +15,7 @@ class Booking {
     this.providerInitials = '',
     this.shortDate = '',
     this.timePill = '',
+    this.apiStatusRaw = '',
   });
 
   final String id;
@@ -32,6 +33,11 @@ class Booking {
   final String shortDate;
   /// e.g. "Aaj 2:00 PM" pill on active cards.
   final String timePill;
+
+  /// Raw status string from the API (e.g. "en_route", "in_progress",
+  /// "confirmed", "completed", "cancelled"). Use this for timeline
+  /// step mapping; [status] is the coarser UI enum.
+  final String apiStatusRaw;
 
   String get initials =>
       providerInitials.isNotEmpty
@@ -120,6 +126,7 @@ class Booking {
       canTrack: status == BookingStatus.active,
       shortDate: date,
       timePill: time.isNotEmpty ? 'Aaj $time' : '',
+      apiStatusRaw: rawStatus,
     );
   }
 }

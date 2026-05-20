@@ -78,7 +78,10 @@ class BookingNotifier extends StateNotifier<BookingState> {
     }
   }
 
-  /// Updates a single booking's status via PATCH and refreshes the list.
+  /// Updates a single booking's status via PATCH and refreshes the local list.
+  ///
+  /// Both [BookingStatus] (UI enum) and [apiStatusRaw] are updated so that
+  /// [LiveTrackingScreen] can map to the correct timeline step immediately.
   Future<void> updateStatus(String bid, String newStatus) async {
     try {
       await apiService.updateBookingStatus(bid, newStatus);
@@ -99,11 +102,25 @@ class BookingNotifier extends StateNotifier<BookingState> {
           providerInitials: b.providerInitials,
           shortDate: b.shortDate,
           timePill: b.timePill,
+          apiStatusRaw: newStatus,
         );
       }).toList();
       state = state.copyWith(bookings: updated);
     } catch (e) {
       state = state.copyWith(error: 'Failed to update status: ${e.toString()}');
+    }
+  }
+
+  /// Fetches the latest data for a single booking by [bid].
+  ///
+  /// Reloads all bookings from the backend (preferred over a separate endpoint
+  /// to avoid double HTTP clients). Returns the matching [Booking] or null.
+  Future<Booking?> fetchBooking(String bid) async {
+    await loadBookings('user_demo_001');
+    try {
+      return state.bookings.firstWhere((b) => b.id == bid);
+    } catch (_) {
+      return state.bookings.isNotEmpty ? state.bookings.first : null;
     }
   }
 
