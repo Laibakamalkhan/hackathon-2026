@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/providers/app_providers.dart';
 import '../../routes/app_routes.dart';
-import '../../services/mock_data_service.dart';
 import '../../widgets/consumer_bottom_nav.dart';
+import '../providers/providers_list_provider.dart';
 import '../../widgets/decorative_background.dart';
 import '../../widgets/glass_card.dart';
 
@@ -178,6 +178,8 @@ class MapViewScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final providersAsync = ref.watch(providersListProvider);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Nearby Providers')),
       body: Stack(
@@ -194,22 +196,43 @@ class MapViewScreen extends ConsumerWidget {
                   color: AppColors.bgPrimary,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
                 ),
-                child: ListView.builder(
-                  controller: controller,
-                  padding: const EdgeInsets.all(20),
-                  itemCount: MockDataService.providers.length,
-                  itemBuilder: (_, i) {
-                    final p = MockDataService.providers[i];
-                    return ListTile(
-                      title: Text(p.name),
-                      subtitle: Text('${p.distance} · ${p.rating}★'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        ref.read(selectedProviderProvider.notifier).state = p;
-                        context.push(AppRoutes.providerProfile);
+                child: providersAsync.when(
+                  data: (providers) {
+                    if (providers.isEmpty) {
+                      return const Center(child: Text('No providers available'));
+                    }
+                    return ListView.builder(
+                      controller: controller,
+                      padding: const EdgeInsets.all(20),
+                      itemCount: providers.length,
+                      itemBuilder: (_, i) {
+                        final p = providers[i];
+                        return ListTile(
+                          title: Text(p.name),
+                          subtitle: Text('${p.distance} · ${p.rating}★'),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () {
+                            ref.read(selectedProviderProvider.notifier).state = p;
+                            context.push(AppRoutes.providerProfile);
+                          },
+                        );
                       },
                     );
                   },
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, st) => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.error_outline, color: AppColors.error, size: 48),
+                          const SizedBox(height: 16),
+                          Text('Failed to load providers: $e', textAlign: TextAlign.center, style: const TextStyle(color: AppColors.error)),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               );
             },
