@@ -18,6 +18,15 @@ class MatchingState {
   /// The handoff payload needed to call agentExecute.
   final Map<String, dynamic>? handoff;
 
+  /// Parsed intent entities from coordinator.
+  final Map<String, dynamic>? extractedFields;
+
+  /// Confidence score of parsed intent.
+  final double? confidence;
+
+  /// Proposed next routing action.
+  final String? action;
+
   final bool isLoading;
   final String? error;
 
@@ -26,6 +35,9 @@ class MatchingState {
     this.providers = const [],
     this.quote,
     this.handoff,
+    this.extractedFields,
+    this.confidence,
+    this.action,
     this.isLoading = false,
     this.error,
   });
@@ -35,6 +47,9 @@ class MatchingState {
     List<ServiceProvider>? providers,
     Map<String, dynamic>? quote,
     Map<String, dynamic>? handoff,
+    Map<String, dynamic>? extractedFields,
+    double? confidence,
+    String? action,
     bool? isLoading,
     String? error,
     bool clearError = false,
@@ -44,6 +59,9 @@ class MatchingState {
       providers: providers ?? this.providers,
       quote: quote ?? this.quote,
       handoff: handoff ?? this.handoff,
+      extractedFields: extractedFields ?? this.extractedFields,
+      confidence: confidence ?? this.confidence,
+      action: action ?? this.action,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
     );
@@ -91,12 +109,25 @@ class MatchingNotifier extends StateNotifier<MatchingState> {
       // Handoff payload for agentExecute.
       final handoff = result['handoff'] as Map<String, dynamic>?;
 
+      // Extra fields
+      final extractedFields = (result['extracted_fields'] ??
+          result['updated_state']?['extracted_fields']) as Map<String, dynamic>?;
+
+      final confidenceRaw = result['confidence'] ??
+          result['updated_state']?['confidence'];
+      final double? confidence = confidenceRaw is num ? confidenceRaw.toDouble() : null;
+
+      final action = result['action'] as String?;
+
       state = state.copyWith(
         isLoading: false,
         coordinatorResult: result,
         providers: providers,
         quote: quote,
         handoff: handoff,
+        extractedFields: extractedFields,
+        confidence: confidence,
+        action: action,
       );
     } catch (e) {
       state = state.copyWith(
@@ -124,11 +155,23 @@ class MatchingNotifier extends StateNotifier<MatchingState> {
 
     final handoff = result['handoff'] as Map<String, dynamic>?;
 
+    final extractedFields = (result['extracted_fields'] ??
+        result['updated_state']?['extracted_fields']) as Map<String, dynamic>?;
+
+    final confidenceRaw = result['confidence'] ??
+        result['updated_state']?['confidence'];
+    final double? confidence = confidenceRaw is num ? confidenceRaw.toDouble() : null;
+
+    final action = result['action'] as String?;
+
     state = state.copyWith(
       coordinatorResult: result,
       providers: providers,
       quote: quote,
       handoff: handoff,
+      extractedFields: extractedFields,
+      confidence: confidence,
+      action: action,
       isLoading: false,
       clearError: true,
     );

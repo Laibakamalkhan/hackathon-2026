@@ -43,7 +43,7 @@ class Booking {
   /// Handles both camelCase and snake_case field names defensively.
   factory Booking.fromJson(Map<String, dynamic> json) {
     // Resolve booking ID from multiple possible field names.
-    final id = (json['booking_id'] ?? json['id'] ?? '').toString();
+    final id = (json['bid'] ?? json['booking_id'] ?? json['id'] ?? '').toString();
 
     // Provider name may come from a nested map or a flat field.
     final providerName =
@@ -65,17 +65,26 @@ class Booking {
       time = parts[1].length >= 5 ? parts[1].substring(0, 5) : parts[1];
     }
 
-    // Location.
-    final location =
-        (json['location_address'] ?? json['location'] ?? '').toString();
+    // Location address mapping: check nested location map or fallbacks.
+    final locRaw = json['location'];
+    final location = (locRaw is Map)
+        ? (locRaw['address'] ?? locRaw['area'] ?? '').toString()
+        : (json['location_address'] ?? json['location'] ?? '').toString();
 
     // Price — may be inside a price_quote map.
     String price = 'PKR —';
     final priceQuote = json['price_quote'];
     if (priceQuote is Map) {
-      final total = priceQuote['total'] ?? priceQuote['amount'];
-      final currency = priceQuote['currency'] ?? 'PKR';
-      if (total != null) price = '$currency $total';
+      final nestedQuote = priceQuote['quote'];
+      final Map<String, dynamic> breakdown = (nestedQuote is Map)
+          ? ((nestedQuote['quote'] is Map) ? Map<String, dynamic>.from(nestedQuote['quote']) : Map<String, dynamic>.from(nestedQuote))
+          : Map<String, dynamic>.from(priceQuote);
+
+      final total = breakdown['total_pkr'] ?? breakdown['total'] ?? breakdown['amount'];
+      final currency = breakdown['currency'] ?? 'PKR';
+      if (total != null) {
+        price = '$currency $total';
+      }
     } else if (json['price'] != null) {
       price = json['price'].toString();
     }
