@@ -10,6 +10,8 @@ import '../../core/network/api_service.dart';
 import '../../core/network/websocket_client.dart';
 import '../../core/providers/app_providers.dart';
 import '../../features/matching/providers/matching_provider.dart';
+import '../../main.dart';
+import '../../models/intent_display_model.dart';
 import '../../models/user_role.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/ai_orb_logo.dart';
@@ -29,26 +31,89 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
   double _progress = 0;
   bool _editingIntent = false;
 
-  // Real-time WebSocket (replaces the fake agentTimer)
+  /// True when backend is reachable but WS failed — shows retry banner
+  /// instead of silently falling through to the fake timer.
+  bool _showWsErrorBanner = false;
+
+  // Real-time WebSocket stream.
   Timer? _progressTimer;
   WebSocketClient? _wsClient;
   StreamSubscription<Map<String, dynamic>>? _wsSub;
 
-  // Visual stages — unchanged from original
-  static final _stages = [
-    AgentStage(label: 'Understanding request', detail: 'AC Repair · Urgency: HIGH · G-13', color: AppColors.accentLavender, icon: Icons.psychology_outlined),
-    AgentStage(label: 'Searching providers',   detail: 'Scanning 47 technicians in area',  color: AppColors.accentSand,     icon: Icons.search),
-    AgentStage(label: 'Ranking options',        detail: 'Evaluating 8 factors for best match', color: AppColors.warning,   icon: Icons.trending_up),
-    AgentStage(label: 'Checking availability',  detail: '3 providers available tomorrow AM',   color: AppColors.success,   icon: Icons.event_available_outlined),
-    AgentStage(label: 'Analysis complete',      detail: '3 best matches found!',               color: AppColors.success,   icon: Icons.check_circle_outline),
-  ];
+  /// Most recent content from any WS trace event; shown as dynamic stage detail.
+  String _lastTraceDetail = '';
 
-  List<IntentTileData> get _tiles => [
-        IntentTileData(title: 'AC Repair', subtitle: 'High Urgency', icon: Icons.build_outlined, bgColor: const Color(0xFFFDF2F2)),
-        IntentTileData(title: '${ref.read(userProfileProvider).area}, ${ref.read(userProfileProvider).city}', icon: Icons.location_on, bgColor: const Color(0xFFF0F9F4)),
-        IntentTileData(title: 'Kal Subah', icon: Icons.schedule, bgColor: const Color(0xFFF3F4F6)),
-        IntentTileData(title: 'Budget Sensitive', icon: Icons.savings_outlined, bgColor: const Color(0xFFFEF9F2)),
+  // ── Visual stage definitions ───────────────────────────────────────────────
+  // Made a getter so _lastTraceDetail can update the first stage's detail text.
+  List<AgentStage> get _stages => [
+        AgentStage(
+          label: 'Understanding request',
+          detail: _lastTraceDetail.isNotEmpty
+              ? _lastTraceDetail
+              : 'Parsing your query…',
+          color: AppColors.accentLavender,
+          icon: Icons.psychology_outlined,
+        ),
+        AgentStage(
+          label: 'Searching providers',
+          detail: 'Scanning nearby technicians',
+          color: AppColors.accentSand,
+          icon: Icons.search,
+        ),
+        AgentStage(
+          label: 'Ranking options',
+          detail: 'Evaluating quality & price match',
+          color: AppColors.warning,
+          icon: Icons.trending_up,
+        ),
+        AgentStage(
+          label: 'Checking availability',
+          detail: 'Confirming open slots',
+          color: AppColors.success,
+          icon: Icons.event_available_outlined,
+        ),
+        AgentStage(
+          label: 'Analysis complete',
+          detail: 'Best matches found!',
+          color: AppColors.success,
+          icon: Icons.check_circle_outline,
+        ),
       ];
+
+  // ── Dynamic intent tiles built from backend extracted_fields ──────────────
+  List<IntentTileData> _buildTiles() {
+    final matching = ref.read(matchingNotifierProvider);
+    final fields = matching.extractedFields;
+    final profile = ref.read(userProfileProvider);
+    final fallback = profile.area.isNotEmpty
+        ? '${profile.area}, ${profile.city}'
+        : '';
+
+    if (fields != null && fields.isNotEmpty) {
+      final tiles = IntentDisplayModel.tilesFromExtractedFields(
+        fields,
+        fallbackLocation: fallback,
+      );
+      if (tiles.isNotEmpty) return tiles;
+    }
+
+    // Structural fallback when backend hasn't responded yet or returned nothing.
+    return [
+      if (fallback.isNotEmpty)
+        IntentTileData(
+          title: fallback,
+          icon: Icons.location_on,
+          bgColor: const Color(0xFFF0F9F4),
+        ),
+      const IntentTileData(
+        title: 'Analyzing…',
+        icon: Icons.hourglass_empty,
+        bgColor: Color(0xFFF3F4F6),
+      ),
+    ];
+  }
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
 
   @override
   void initState() {
@@ -58,11 +123,23 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
     _connectWebSocket();
   }
 
+  @override
+  void dispose() {
+    _progressTimer?.cancel();
+    _wsSub?.cancel();
+    _wsClient?.disconnect();
+    super.dispose();
+  }
+
+  // ── Progress bar ──────────────────────────────────────────────────────────
+
   void _startProgressBar() {
     _progressTimer = Timer.periodic(const Duration(milliseconds: 60), (_) {
       if (_progress < 95 && mounted) setState(() => _progress += 0.8);
     });
   }
+
+  // ── WebSocket connection ───────────────────────────────────────────────────
 
   void _connectWebSocket() {
     try {
@@ -84,7 +161,17 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
       _wsSub = stream.listen(
         (event) {
           if (!mounted) return;
-          final type = (event['type'] ?? event['event'] ?? '').toString().toLowerCase();
+          final type =
+              (event['type'] ?? event['event'] ?? '').toString().toLowerCase();
+
+          // Update dynamic stage detail from any trace content.
+          final content = event['content']?.toString() ?? '';
+          if (content.isNotEmpty) {
+            setState(() => _lastTraceDetail = content.length > 64
+                ? '${content.substring(0, 64)}…'
+                : content);
+          }
+
           switch (type) {
             case 'thinking':
             case 'orchestration_started':
@@ -94,57 +181,166 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
             case 'tool_result':
             case 'step_completed':
               if (_stage < 3) setState(() => _stage = 2);
+            case 'decision':
+              if (_stage < 4) setState(() => _stage = 3);
             case 'completed':
             case 'orchestration_completed':
               _progressTimer?.cancel();
-              setState(() { _stage = 4; _progress = 100; });
-              // Store result so ProviderRankingScreen / PriceBreakdownScreen can use it.
-              ref.read(matchingNotifierProvider.notifier).storeCoordinatorResult(event);
-              _onPipelineComplete();
+              setState(() {
+                _stage = 4;
+                _progress = 100;
+              });
+              // Store result so ProviderRankingScreen / PriceBreakdownScreen
+              // can read providers, quote, handoff immediately.
+              ref
+                  .read(matchingNotifierProvider.notifier)
+                  .storeCoordinatorResult(event);
+              // Route based on `action` returned by the backend.
+              _routeOnAction(event);
             case 'error':
-              if (mounted) _fallbackToTimer();
+              if (mounted) _handleWsError();
           }
         },
-        onError: (_) { if (mounted) _fallbackToTimer(); },
-        onDone: ()  { if (mounted && _stage < 4) _fallbackToTimer(); },
+        onError: (_) {
+          if (mounted) _handleWsError();
+        },
+        onDone: () {
+          if (mounted && _stage < 4) _handleWsError();
+        },
       );
     } catch (_) {
+      _handleWsError();
+    }
+  }
+
+  // ── Action-based routing ───────────────────────────────────────────────────
+
+  /// Switches on the `action` field from the `completed` WS payload
+  /// (or from the HTTP coordinator response) and navigates accordingly.
+  ///
+  /// | action              | navigation target                     |
+  /// |---------------------|---------------------------------------|
+  /// | ask_clarification   | AppRoutes.lowConfidence (push)        |
+  /// | show_providers + [] | AppRoutes.noProviders (push)          |
+  /// | show_providers + 1+ | IntentSummary → providerRanking (go) |
+  /// | (unknown / null)    | IntentSummary if providers > 0        |
+  void _routeOnAction(Map<String, dynamic> event) {
+    final action =
+        (event['action'] as String? ?? '').toLowerCase().trim();
+    final providers = (event['providers'] ??
+        event['matching_providers'] ??
+        []) as List<dynamic>;
+
+    switch (action) {
+      case 'ask_clarification':
+        // Backend is not confident enough — ask user for more details.
+        if (mounted) context.push(AppRoutes.lowConfidence);
+
+      case 'show_providers':
+        if (providers.isEmpty) {
+          // Matched action but no providers in range.
+          if (mounted) context.push(AppRoutes.noProviders);
+        } else {
+          // Happy path — show intent summary, then let user confirm & rank.
+          _showIntentSummary();
+        }
+
+      default:
+        // action is empty or unknown (e.g. older backend version).
+        // Degrade gracefully: show summary when providers available.
+        if (providers.isNotEmpty) {
+          _showIntentSummary();
+        } else {
+          // No providers and no clear action — treat as no_providers.
+          if (mounted) context.push(AppRoutes.noProviders);
+        }
+    }
+  }
+
+  /// Transitions the chat phase to [ChatFlowPhase.intentSummary].
+  void _showIntentSummary() {
+    ref.read(chatFlowPhaseProvider.notifier).state =
+        ChatFlowPhase.intentSummary;
+    if (mounted) setState(() {});
+  }
+
+  // ── Error / fallback handling ──────────────────────────────────────────────
+
+  /// Called on WS error / close before completion.
+  ///
+  /// - Backend **online**: shows a non-fatal banner with "Retry via HTTP"
+  ///   and "Use Demo" options.  Does NOT silently run fake timer.
+  /// - Backend **offline**: falls through to the timer-driven demo UI so the
+  ///   app remains usable without any network.
+  void _handleWsError() {
+    final backendOnline = ref.read(backendOnlineProvider);
+    if (backendOnline) {
+      setState(() => _showWsErrorBanner = true);
+    } else {
       _fallbackToTimer();
     }
   }
 
-  /// Original fake-timer behaviour used when the backend is unreachable.
+  /// HTTP retry — calls /api/v1/agent/coordinate directly when WS failed.
+  Future<void> _retryViaHttp() async {
+    setState(() {
+      _showWsErrorBanner = false;
+      _stage = 0;
+      _progress = 0;
+      _lastTraceDetail = '';
+    });
+    ref.read(chatFlowPhaseProvider.notifier).state = ChatFlowPhase.processing;
+    _startProgressBar();
+
+    final query = ref.read(chatMessageProvider);
+    await ref.read(matchingNotifierProvider.notifier).coordinate(
+          query: query.isNotEmpty ? query : 'AC repair kar do',
+          lat: 33.649,
+          lng: 72.973,
+        );
+
+    if (!mounted) return;
+
+    final ms = ref.read(matchingNotifierProvider);
+    if (ms.error != null) {
+      // HTTP also failed — fall back to demo timer.
+      _fallbackToTimer();
+    } else {
+      _progressTimer?.cancel();
+      setState(() {
+        _stage = 4;
+        _progress = 100;
+      });
+      _routeOnAction(ms.coordinatorResult ?? {});
+    }
+  }
+
+  /// Timer-driven fake pipeline — only used when backend is definitively
+  /// offline ([backendOnlineProvider] == false).
   void _fallbackToTimer() {
     Timer.periodic(AppDurations.agentStep, (t) {
-      if (!mounted) { t.cancel(); return; }
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
       if (_stage < _stages.length - 1) {
         setState(() => _stage++);
       } else if (_stage == _stages.length - 1) {
         t.cancel();
-        _onPipelineComplete();
+        _showIntentSummary();
       }
     });
   }
 
-  void _onPipelineComplete() {
-    ref.read(chatFlowPhaseProvider.notifier).state =
-        ref.read(chatNeedsUrgencyProvider) ? ChatFlowPhase.followUp : ChatFlowPhase.intentSummary;
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    _progressTimer?.cancel();
-    _wsSub?.cancel();
-    _wsClient?.disconnect();
-    super.dispose();
-  }
+  // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final message = ref.watch(chatMessageProvider);
-    final phase   = ref.watch(chatFlowPhaseProvider);
+    final phase = ref.watch(chatFlowPhaseProvider);
     final profile = ref.watch(userProfileProvider);
+    final matching = ref.watch(matchingNotifierProvider);
+    final confidence = matching.confidence ?? 0.94;
 
     return Scaffold(
       body: DecorativeBackground(
@@ -152,38 +348,84 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // ── WS error banner (only when backend online + WS failed) ────
+              if (_showWsErrorBanner)
+                MaterialBanner(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  content: const Text(
+                    'Live stream unavailable — switching to direct call',
+                  ),
+                  leading: const Icon(Icons.wifi_off, color: AppColors.warning),
+                  backgroundColor:
+                      AppColors.warning.withValues(alpha: 0.12),
+                  actions: [
+                    TextButton(
+                      onPressed: _retryViaHttp,
+                      child: const Text('Retry'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() => _showWsErrorBanner = false);
+                        _fallbackToTimer();
+                      },
+                      child: const Text('Demo Mode'),
+                    ),
+                  ],
+                ),
+
+              // ── Greeting ─────────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                child: Text('Salam, ${profile.name.split(' ').first} 👋',
-                    style: Theme.of(context).textTheme.titleLarge),
+                child: Text(
+                  'Salam, ${profile.name.split(' ').first} 👋',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
               ),
+
+              // ── Chat area ─────────────────────────────────────────────────
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.all(20),
                   children: [
+                    // User message bubble
                     Align(
                       alignment: Alignment.centerRight,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Container(
-                            constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.78),
+                            constraints: BoxConstraints(
+                              maxWidth: MediaQuery.sizeOf(context).width * 0.78,
+                            ),
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               gradient: AppColors.userBubbleGradient,
                               borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(20), topRight: Radius.circular(8),
-                                bottomLeft: Radius.circular(20), bottomRight: Radius.circular(20),
+                                topLeft: Radius.circular(20),
+                                topRight: Radius.circular(8),
+                                bottomLeft: Radius.circular(20),
+                                bottomRight: Radius.circular(20),
                               ),
                             ),
-                            child: Text(message, style: const TextStyle(fontSize: 15, height: 1.4)),
+                            child: Text(
+                              message,
+                              style:
+                                  const TextStyle(fontSize: 15, height: 1.4),
+                            ),
                           ),
                           const SizedBox(height: 4),
-                          Text('10:32 AM', style: Theme.of(context).textTheme.labelSmall),
+                          Text(
+                            '10:32 AM',
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
                         ],
                       ),
                     ),
+
                     const SizedBox(height: 20),
+
+                    // AI response area
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -193,31 +435,61 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Processing phase — pipeline panel
                               if (phase == ChatFlowPhase.processing)
-                                AiPipelinePanel(stages: _stages, currentIndex: _stage, progress: _progress / 100),
-                              if (phase == ChatFlowPhase.intentSummary || phase == ChatFlowPhase.complete) ...[
+                                AiPipelinePanel(
+                                  stages: _stages,
+                                  currentIndex: _stage,
+                                  progress: _progress / 100,
+                                ),
+
+                              // Intent summary phase — dynamic tiles + confidence
+                              if (phase == ChatFlowPhase.intentSummary ||
+                                  phase == ChatFlowPhase.complete) ...[
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   margin: const EdgeInsets.only(bottom: 12),
-                                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
                                   child: Text(
-                                    _editingIntent ? 'Edit karein aur confirm karein:' : 'Mujhe samajh aaya — aap ko chahiye:',
-                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                    _editingIntent
+                                        ? 'Edit karein aur confirm karein:'
+                                        : 'Mujhe samajh aaya — aap ko chahiye:',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600),
                                   ),
                                 ),
                                 IntentSummaryCard(
-                                  tiles: _tiles,
+                                  // Dynamic tiles — built from backend
+                                  // extracted_fields, never hardcoded.
+                                  tiles: _buildTiles(),
+                                  // Real confidence from coordinator response.
+                                  confidence: confidence,
                                   showEditActions: _editingIntent,
-                                  onConfirm: () => context.go(AppRoutes.providerRanking),
-                                  onEdit: () => setState(() => _editingIntent = true),
+                                  onConfirm: () =>
+                                      context.go(AppRoutes.providerRanking),
+                                  onEdit: () =>
+                                      setState(() => _editingIntent = true),
                                   onRerun: () {
-                                    setState(() { _editingIntent = false; _stage = 0; _progress = 0; });
-                                    ref.read(chatFlowPhaseProvider.notifier).state = ChatFlowPhase.processing;
+                                    setState(() {
+                                      _editingIntent = false;
+                                      _stage = 0;
+                                      _progress = 0;
+                                      _lastTraceDetail = '';
+                                      _showWsErrorBanner = false;
+                                    });
+                                    ref
+                                        .read(chatFlowPhaseProvider.notifier)
+                                        .state = ChatFlowPhase.processing;
                                     _wsSub?.cancel();
                                     _wsClient?.disconnect();
+                                    _startProgressBar();
                                     _connectWebSocket();
                                   },
-                                  onCancel: () => setState(() => _editingIntent = false),
+                                  onCancel: () =>
+                                      setState(() => _editingIntent = false),
                                 ),
                               ],
                             ],
@@ -228,6 +500,7 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
                   ],
                 ),
               ),
+
               _ChatInputBar(onInterrupt: () {}),
             ],
           ),
@@ -236,6 +509,8 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
     );
   }
 }
+
+// ── Bottom input bar ──────────────────────────────────────────────────────────
 
 class _ChatInputBar extends StatelessWidget {
   const _ChatInputBar({required this.onInterrupt});
@@ -249,18 +524,39 @@ class _ChatInputBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(32),
-        boxShadow: const [BoxShadow(color: AppColors.glassShadow, blurRadius: 16, offset: Offset(0, 4))],
+        boxShadow: const [
+          BoxShadow(
+              color: AppColors.glassShadow,
+              blurRadius: 16,
+              offset: Offset(0, 4))
+        ],
       ),
       child: Row(
         children: [
-          CircleAvatar(radius: 20, backgroundColor: AppColors.bgSecondary,
-              child: IconButton(icon: const Icon(Icons.mic, size: 20), onPressed: onInterrupt)),
-          const Expanded(
-            child: Text('Type to interrupt or wait...',
-                style: TextStyle(color: AppColors.textSecondary, fontStyle: FontStyle.italic, fontSize: 14)),
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: AppColors.bgSecondary,
+            child: IconButton(
+              icon: const Icon(Icons.mic, size: 20),
+              onPressed: onInterrupt,
+            ),
           ),
-          CircleAvatar(radius: 20, backgroundColor: AppColors.accentLavender,
-              child: IconButton(icon: const Icon(Icons.send, size: 18), onPressed: null)),
+          const Expanded(
+            child: Text(
+              'Type to interrupt or wait...',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontStyle: FontStyle.italic,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: AppColors.accentLavender,
+            child:
+                IconButton(icon: const Icon(Icons.send, size: 18), onPressed: null),
+          ),
         ],
       ),
     );
