@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/auth/firebase_bootstrap.dart';
 import 'core/constants/api_endpoints.dart';
 import 'core/network/http_client.dart';
@@ -29,6 +30,11 @@ void main() async {
     ),
   );
 
+  try {
+    await dotenv.load(fileName: 'assets/.env');
+  } catch (e) {
+    debugPrint('assets/.env not found, using system environment variables or demo fallback.');
+  }
   final firebaseReady = await bootstrapFirebase();
   activateDemoSession();
 

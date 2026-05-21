@@ -17,6 +17,7 @@ import '../features/onboarding/setup_profile_screen.dart';
 import '../features/onboarding/splash_screen.dart';
 import '../features/onboarding/tutorial_screens.dart';
 import '../features/provider/provider_screens.dart';
+import '../screens/auth_gate.dart';
 import 'app_routes.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -61,6 +62,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.providerAccountProfile, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const ProviderAccountProfileScreen())),
       GoRoute(path: AppRoutes.providerSettings, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const ProviderSettingsScreen())),
       GoRoute(path: AppRoutes.lowConfidence, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const LowConfidenceScreen())),
+      GoRoute(path: AppRoutes.login, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const AuthGate())),
       GoRoute(path: AppRoutes.noProviders, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const NoProvidersScreen())),
       GoRoute(path: AppRoutes.providerCancelled, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const ProviderCancelledScreen())),
       GoRoute(path: AppRoutes.disputeResolution, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const DisputeResolutionScreen())),

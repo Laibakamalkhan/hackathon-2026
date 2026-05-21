@@ -31,6 +31,7 @@ abstract final class AppRoutes {
   static const providerAccountProfile = '/provider-account-profile';
   static const providerSettings = '/provider-settings';
   static const lowConfidence = '/low-confidence';
+  static const login = '/login';
   static const noProviders = '/no-providers';
   static const providerCancelled = '/provider-cancelled';
   static const disputeResolution = '/dispute-resolution';

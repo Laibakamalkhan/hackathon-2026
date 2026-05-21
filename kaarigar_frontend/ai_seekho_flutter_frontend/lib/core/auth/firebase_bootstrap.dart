@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../config/firebase_config.dart';
 import '../network/http_client.dart';
 
 /// True when [Firebase.initializeApp] succeeded this session.
@@ -10,7 +11,9 @@ final firebaseEnabledProvider = Provider<bool>((ref) => false);
 /// Attempts Firebase init. Returns whether phone auth can use Firebase.
 Future<bool> bootstrapFirebase() async {
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: kIsWeb ? firebaseOptionsWeb : null,
+    );
     return true;
   } catch (e) {
     if (kDebugMode) {
