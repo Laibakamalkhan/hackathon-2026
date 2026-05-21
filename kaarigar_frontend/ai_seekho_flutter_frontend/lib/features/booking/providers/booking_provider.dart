@@ -115,8 +115,8 @@ class BookingNotifier extends StateNotifier<BookingState> {
   ///
   /// Reloads all bookings from the backend (preferred over a separate endpoint
   /// to avoid double HTTP clients). Returns the matching [Booking] or null.
-  Future<Booking?> fetchBooking(String bid) async {
-    await loadBookings('user_demo_001');
+  Future<Booking?> fetchBooking(String bid, {String? currentUserId}) async {
+    await loadBookings(currentUserId ?? 'user_demo_001');
     try {
       return state.bookings.firstWhere((b) => b.id == bid);
     } catch (_) {

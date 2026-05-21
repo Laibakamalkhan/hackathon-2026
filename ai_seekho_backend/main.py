@@ -5,7 +5,7 @@ import asyncio
 import uuid
 from typing import Dict, Any, List, Optional
 from datetime import datetime
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -100,6 +100,33 @@ class DisputeCreateRequest(BaseModel):
     booking_id: str
     type: str
     description: str
+
+# ----------------------------------------------------
+# Authentication Middleware
+# ----------------------------------------------------
+def get_current_user_id(
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None)
+) -> str:
+    # 1. Dev mode override
+    if settings.ENV == "development" and x_user_id:
+        return x_user_id
+
+    # 2. Firebase token verification
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split("Bearer ")[1]
+        try:
+            import firebase_admin.auth
+            decoded_token = firebase_admin.auth.verify_id_token(token)
+            return decoded_token.get("uid")
+        except Exception as e:
+            raise HTTPException(status_code=401, detail=f"Invalid authentication token: {e}")
+
+    # Fallback for dev mode
+    if settings.ENV == "development":
+        return "user_demo_001"
+        
+    raise HTTPException(status_code=401, detail="Unauthorized")
 
 # ----------------------------------------------------
 # HTTP API Endpoints
@@ -461,12 +488,18 @@ async def agent_coordinate(req: CoordinateRequest):
 
 
 @app.post("/api/v1/agent/execute")
-async def agent_execute(req: ExecuteRequest):
+async def agent_execute(req: ExecuteRequest, uid: str = Depends(get_current_user_id)):
     """
     Runs the ExecutorAgent: locks the booking slot, creates Firestore record,
     schedules simulated reminders. Called after user confirms from CoordinatorAgent.
     """
     try:
+        if req.handoff.get("full_context", {}).get("user_id") != uid:
+            # Fallback check for missing user_id in handoff
+            if not req.handoff.get("full_context", {}).get("user_id") and settings.ENV == "development":
+                req.handoff.setdefault("full_context", {})["user_id"] = uid
+            else:
+                raise HTTPException(status_code=403, detail="Forbidden: User ID mismatch in handoff context")
         handoff = AgentHandoff(**req.handoff)
         executor = _get_executor()
         result = executor.execute_booking(handoff)
@@ -477,11 +510,13 @@ async def agent_execute(req: ExecuteRequest):
 
 
 @app.post("/api/v1/agent/resolve")
-async def agent_resolve(req: ResolveDisputeRequest):
+async def agent_resolve(req: ResolveDisputeRequest, uid: str = Depends(get_current_user_id)):
     """
     Runs the GuardianAgent: resolves the dispute using Gemini reasoning + deterministic
     refund table. Escalates to human if refund > PKR 2000 or manager requested.
     """
+    if req.user_id != uid:
+        raise HTTPException(status_code=403, detail="Forbidden")
     mapping = {
         "poor service": "quality",
         "poor_service": "quality",
@@ -522,11 +557,13 @@ async def agent_resolve(req: ResolveDisputeRequest):
 
 
 @app.post("/api/v1/feedback/submit")
-async def submit_feedback(req: FeedbackRequest):
+async def submit_feedback(req: FeedbackRequest, uid: str = Depends(get_current_user_id)):
     """
     Submits booking feedback and updates provider reputation via GuardianAgent.
     Returns saved status and new provider rating.
     """
+    if req.user_id != uid:
+        raise HTTPException(status_code=403, detail="Forbidden")
     try:
         guardian = _get_guardian()
         result = guardian.collect_feedback(
@@ -542,11 +579,13 @@ async def submit_feedback(req: FeedbackRequest):
 
 
 @app.get("/api/v1/bookings")
-async def get_user_bookings(user_id: str):
+async def get_user_bookings(user_id: str, uid: str = Depends(get_current_user_id)):
     """
     Returns all bookings for a user_id from Firestore.
     Falls back to empty list if Firestore is unavailable.
     """
+    if user_id != uid:
+        raise HTTPException(status_code=403, detail="Forbidden")
     if not db:
         return {"bookings": [], "count": 0, "source": "firestore_unavailable"}
 

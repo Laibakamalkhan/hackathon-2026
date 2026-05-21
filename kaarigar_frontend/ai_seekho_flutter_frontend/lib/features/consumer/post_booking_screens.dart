@@ -14,6 +14,7 @@ import '../../features/dispute/providers/dispute_provider.dart';
 import '../../core/constants/dispute_types.dart';
 import '../../models/booking_model.dart';
 import '../../routes/app_routes.dart';
+import '../../services/auth_service.dart';
 
 import '../../widgets/consumer_bottom_nav.dart';
 import '../../widgets/decorative_background.dart';
@@ -38,7 +39,8 @@ class _BookingHistoryScreenState extends ConsumerState<BookingHistoryScreen> {
     super.initState();
     // Fetch real bookings from the backend after the first frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(bookingNotifierProvider.notifier).loadBookings('user_demo_001');
+      final uid = ref.read(authServiceProvider).userId ?? 'user_demo_001';
+      ref.read(bookingNotifierProvider.notifier).loadBookings(uid);
     });
   }
 
@@ -85,9 +87,10 @@ class _BookingHistoryScreenState extends ConsumerState<BookingHistoryScreen> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () => ref
-                          .read(bookingNotifierProvider.notifier)
-                          .loadBookings('user_demo_001'),
+                      onPressed: () {
+                        final uid = ref.read(authServiceProvider).userId ?? 'user_demo_001';
+                        ref.read(bookingNotifierProvider.notifier).loadBookings(uid);
+                      },
                       child: const Text('Retry', style: TextStyle(fontSize: 12)),
                     ),
                   ],
@@ -393,11 +396,11 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
   void _startPolling() {
     final bid = ref.read(selectedBookingIdProvider);
     if (bid == null || !mounted) return;
-    // Immediate fetch on enter.
-    ref.read(bookingNotifierProvider.notifier).fetchBooking(bid);
+    final uid = ref.read(authServiceProvider).userId ?? 'user_demo_001';
+    ref.read(bookingNotifierProvider.notifier).fetchBooking(bid, currentUserId: uid);
     // Then every 10 s while mounted.
     _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      if (mounted) ref.read(bookingNotifierProvider.notifier).fetchBooking(bid);
+      if (mounted) ref.read(bookingNotifierProvider.notifier).fetchBooking(bid, currentUserId: uid);
     });
   }
 
@@ -910,12 +913,14 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
     }
     setState(() => _isSubmitting = true);
     try {
+      final uid = ref.read(authServiceProvider).userId ?? 'user_demo_001';
       await apiService.submitFeedback(
         bookingId: bookingId,
         rating: _rating.toDouble(),
         comment: _commentController.text.trim().isNotEmpty
             ? _commentController.text.trim()
             : 'Great service!',
+        userId: uid,
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1167,7 +1172,7 @@ class DisputeResolutionScreen extends ConsumerWidget {
                         bookingId: disputeState.lastBookingId!,
                         disputeType: disputeState.lastDisputeType!,
                         description: disputeState.lastDescription!,
-                        userId: disputeState.lastUserId ?? 'user_demo_001',
+                        userId: disputeState.lastUserId ?? ref.read(authServiceProvider).userId ?? 'user_demo_001',
                       );
                     },
                   ),
@@ -1236,7 +1241,8 @@ class DisputeResolutionScreen extends ConsumerWidget {
                 onPressed: () {
                   ref.read(disputeNotifierProvider.notifier).reset();
                   // Re-fetch bookings after resolution accepts
-                  ref.read(bookingNotifierProvider.notifier).loadBookings('user_demo_001');
+                  final uid = ref.read(authServiceProvider).userId ?? 'user_demo_001';
+                  ref.read(bookingNotifierProvider.notifier).loadBookings(uid);
                   context.go(AppRoutes.bookings);
                 },
               ),

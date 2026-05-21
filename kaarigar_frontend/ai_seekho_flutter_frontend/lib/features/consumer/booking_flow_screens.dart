@@ -11,6 +11,7 @@ import '../../models/provider_model.dart';
 import '../../models/quote_model.dart';
 import '../../routes/app_routes.dart';
 import '../../services/mock_data_service.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/ai_orb_logo.dart';
 import '../../widgets/decorative_background.dart';
 import '../../widgets/glass_card.dart';
@@ -704,7 +705,8 @@ class _BookingConfirmedScreenState extends ConsumerState<BookingConfirmedScreen>
         if (status == 'success' ||
             status == 'booked' ||
             result['bid'] != null) {
-          ref.read(bookingNotifierProvider.notifier).loadBookings('user_demo_001');
+          final uid = ref.read(authServiceProvider).userId ?? 'user_demo_001';
+          ref.read(bookingNotifierProvider.notifier).loadBookings(uid);
           setState(() {
             _isBooking = false;
             _bookingId = (result['bid'] ?? result['booking_id']).toString();

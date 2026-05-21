@@ -18,13 +18,27 @@ class HttpException implements Exception {
 /// - Throws [HttpException] on non-2xx status codes.
 /// - Wraps socket / network errors as [HttpException] with status 500.
 class HttpClient {
+  static String? bearerToken;
+  static String? demoUid;
+
   final http.Client _client = http.Client();
+
+  Map<String, String> get _headers {
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    if (bearerToken != null) {
+      headers['Authorization'] = 'Bearer $bearerToken';
+    }
+    if (demoUid != null) {
+      headers['X-User-Id'] = demoUid!;
+    }
+    return headers;
+  }
 
   Future<Map<String, dynamic>> get(String url) async {
     try {
       final response = await _client.get(
         Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
+        headers: _headers,
       );
       return _processResponse(response);
     } catch (e) {
@@ -40,7 +54,7 @@ class HttpClient {
     try {
       final response = await _client.post(
         Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
+        headers: _headers,
         body: json.encode(body),
       );
       return _processResponse(response);
