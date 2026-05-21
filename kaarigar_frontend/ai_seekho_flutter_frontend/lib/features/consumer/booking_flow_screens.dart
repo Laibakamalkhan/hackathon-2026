@@ -16,6 +16,7 @@ import '../../widgets/decorative_background.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/gradient_cta_button.dart';
 import '../../widgets/primary_button.dart';
+import '../../main.dart';
 
 class ProviderRankingScreen extends ConsumerWidget {
   const ProviderRankingScreen({super.key});
@@ -25,9 +26,49 @@ class ProviderRankingScreen extends ConsumerWidget {
     final profile = ref.watch(userProfileProvider);
     // Use real providers from the coordinator; fall back to mock if not yet loaded.
     final matchingState = ref.watch(matchingNotifierProvider);
-    final providers = matchingState.providers.isNotEmpty
-        ? matchingState.providers
-        : MockDataService.providers;
+    final backendOnline = ref.watch(backendOnlineProvider);
+    final providers = matchingState.providers;
+    final useMockFallback =
+        providers.isEmpty && !backendOnline && !matchingState.isLoading;
+
+    if (providers.isEmpty && backendOnline && !matchingState.isLoading) {
+      return Scaffold(
+        body: DecorativeBackground(
+          child: SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.search_off, size: 48, color: AppColors.textSecondary),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'No providers loaded',
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      matchingState.error ?? 'Run a new search from chat first.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 20),
+                    OutlinedButton(
+                      onPressed: () => context.go(AppRoutes.home),
+                      child: const Text('Back to Chat'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final displayProviders =
+        providers.isNotEmpty ? providers : (useMockFallback ? MockDataService.providers : providers);
 
     return Scaffold(
       body: DecorativeBackground(
@@ -46,7 +87,7 @@ class ProviderRankingScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('${providers.length} best providers mile hain! 🏆',
+                          Text('${displayProviders.length} best providers mile hain! 🏆',
                               style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                           Text('8 factors se ranked — ${profile.area}, ${profile.city} mein',
                               style: Theme.of(context).textTheme.bodySmall),
@@ -57,8 +98,8 @@ class ProviderRankingScreen extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              ...List.generate(providers.length, (i) {
-                final p = providers[i];
+              ...List.generate(displayProviders.length, (i) {
+                final p = displayProviders[i];
                 return _ProviderRankingCard(
                   provider: p,
                   rank: i + 1,
@@ -255,7 +296,11 @@ class ReasoningDrawerScreen extends ConsumerWidget {
     final coordinatorResult = matchingState.coordinatorResult;
     final traceEvents = coordinatorResult?['trace_events'] as List<dynamic>?;
     
-    final provider = ref.watch(selectedProviderProvider);
+    final selected = ref.watch(selectedProviderProvider);
+    final provider = selected ??
+        (matchingState.providers.isNotEmpty
+            ? matchingState.providers.first
+            : null);
     final providerJson = provider?.rawJson ?? const {};
     final breakdownRaw = providerJson['match_breakdown'] ?? providerJson['match_factors'] ?? providerJson['factor_scores'];
     final breakdown = breakdownRaw is Map<String, dynamic> ? breakdownRaw : null;
@@ -499,8 +544,29 @@ class PriceBreakdownScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final provider = ref.watch(selectedProviderProvider) ?? MockDataService.providers.first;
-    final quoteDisplay = QuoteDisplay.fromCoordinatorQuote(ref.watch(matchingNotifierProvider).quote);
+    final matching = ref.watch(matchingNotifierProvider);
+    final backendOnline = ref.watch(backendOnlineProvider);
+    final provider = ref.watch(selectedProviderProvider) ??
+        (matching.providers.isNotEmpty
+            ? matching.providers.first
+            : (backendOnline ? null : MockDataService.providers.first));
+    if (provider == null) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
+          title: const Text('Price Breakdown 💰'),
+        ),
+        body: const Center(child: Text('Select a provider from ranking first.')),
+      );
+    }
+    final quoteDisplay = QuoteDisplay.fromCoordinatorQuote(matching.quote);
+    final fields = matching.extractedFields ?? {};
+    final locationLabel = [
+      fields['location_mention'],
+      fields['sector'],
+      fields['location'],
+    ].whereType<Object>().map((e) => e.toString()).where((s) => s.isNotEmpty).join(', ');
+    final scheduleLabel = (fields['time_preference'] ?? fields['scheduled_time'] ?? 'Kal, 10:00 AM').toString();
 
     final lines = quoteDisplay.lines.isNotEmpty 
         ? quoteDisplay.lines.map((l) => (l.label, 'PKR ${l.amount.toStringAsFixed(0)}', l.amount < 0)).toList() 
@@ -526,7 +592,10 @@ class PriceBreakdownScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(provider.name, style: const TextStyle(fontWeight: FontWeight.w800)),
-                        Text('📍 G-13, Islamabad · Kal 10:00 AM', style: Theme.of(context).textTheme.bodySmall),
+                        Text(
+                          '📍 ${locationLabel.isNotEmpty ? locationLabel : "Islamabad"} · $scheduleLabel',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                       ],
                     ),
                   ),
@@ -631,7 +700,10 @@ class _BookingConfirmedScreenState extends ConsumerState<BookingConfirmedScreen>
       final result = await apiService.agentExecute(handoff: handoff);
       
       if (mounted) {
-        if (result['status'] == 'success' || result['bid'] != null) {
+        final status = (result['status'] ?? '').toString().toLowerCase();
+        if (status == 'success' ||
+            status == 'booked' ||
+            result['bid'] != null) {
           ref.read(bookingNotifierProvider.notifier).loadBookings('user_demo_001');
           setState(() {
             _isBooking = false;
@@ -730,7 +802,8 @@ class _BookingConfirmedScreenState extends ConsumerState<BookingConfirmedScreen>
                       _detailRow('Provider', provider.name, subtitle: '${provider.rating} · Top Rated'),
                       _detailRow('Date & Time', 'Kal, 10:00 AM'),
                       _detailRow('Total', ref.watch(matchingNotifierProvider).quote?['total'] != null ? 'PKR ${ref.watch(matchingNotifierProvider).quote!["total"]}' : 'PKR 880', highlight: true),
-                      _detailRow('Booking ID', '#${_bookingId ?? 'BSK-2024-1821'}'),
+                      if (_bookingId != null)
+                        _detailRow('Booking ID', '#$_bookingId'),
                       const Divider(height: 28),
                       _infoBox(
                         Icons.alarm,

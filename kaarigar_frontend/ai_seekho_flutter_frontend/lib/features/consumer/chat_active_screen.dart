@@ -194,15 +194,29 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
             case 'completed':
             case 'orchestration_completed':
               _progressTimer?.cancel();
+              final action =
+                  (event['action'] as String? ?? '').toLowerCase().trim();
+              if (action == 'ask_clarification') {
+                ref
+                    .read(matchingNotifierProvider.notifier)
+                    .storeCoordinatorResult(event);
+                ref.read(matchingNotifierProvider.notifier).clearForClarification();
+                ref.read(chatFlowPhaseProvider.notifier).state =
+                    ChatFlowPhase.processing;
+                setState(() {
+                  _stage = 3;
+                  _progress = 100;
+                });
+                if (mounted) context.push(AppRoutes.lowConfidence);
+                break;
+              }
               setState(() {
                 _stage = 4;
                 _progress = 100;
               });
-              // Normalise via the shared _applyCoordinatorPayload normaliser.
               ref
                   .read(matchingNotifierProvider.notifier)
                   .storeCoordinatorResult(event);
-              // Route based on `action` returned by the backend.
               _routeOnAction(event);
             case 'error':
               if (mounted) _handleWsError();
@@ -241,26 +255,29 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
 
     switch (action) {
       case 'ask_clarification':
-        // Backend is not confident enough — ask user for more details.
+        // Usually handled in the WS/HTTP completed handler; guard for older payloads.
+        if (ref.read(matchingNotifierProvider).coordinatorResult == null) {
+          ref.read(matchingNotifierProvider.notifier).storeCoordinatorResult(event);
+        }
+        ref.read(matchingNotifierProvider.notifier).clearForClarification();
+        ref.read(chatFlowPhaseProvider.notifier).state =
+            ChatFlowPhase.processing;
         if (mounted) context.push(AppRoutes.lowConfidence);
+        return;
 
       case 'show_providers':
         if (providers.isEmpty) {
-          // Matched action but no providers in range.
           if (mounted) context.push(AppRoutes.noProviders);
         } else {
-          // Happy path — show intent summary, then let user confirm & rank.
           _showIntentSummary();
         }
+        return;
 
       default:
-        // action is empty or unknown (e.g. older backend version).
-        // Degrade gracefully: show summary when providers available.
         if (providers.isNotEmpty) {
           _showIntentSummary();
-        } else {
-          // No providers and no clear action — treat as no_providers.
-          if (mounted) context.push(AppRoutes.noProviders);
+        } else if (mounted) {
+          context.push(AppRoutes.noProviders);
         }
     }
   }
@@ -329,14 +346,30 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
         _progress = 0;
       });
     } else {
-      // HTTP succeeded — advance UI to completion without any fake animation.
       _progressTimer?.cancel();
+      final result = ms.coordinatorResult ?? {};
+      final action =
+          (result['action'] as String? ?? ms.action ?? '').toLowerCase().trim();
+      if (action == 'ask_clarification') {
+        if (ms.coordinatorResult != null) {
+          ref.read(matchingNotifierProvider.notifier).clearForClarification();
+        }
+        ref.read(chatFlowPhaseProvider.notifier).state =
+            ChatFlowPhase.processing;
+        setState(() {
+          _stage = 3;
+          _progress = 100;
+          _lastTraceDetail = '';
+        });
+        if (mounted) context.push(AppRoutes.lowConfidence);
+        return;
+      }
       setState(() {
         _stage = 4;
         _progress = 100;
         _lastTraceDetail = '';
       });
-      _routeOnAction(ms.coordinatorResult ?? {});
+      _routeOnAction(result);
     }
   }
 
@@ -370,7 +403,7 @@ class _ChatActiveScreenState extends ConsumerState<ChatActiveScreen> {
     final phase = ref.watch(chatFlowPhaseProvider);
     final profile = ref.watch(userProfileProvider);
     final matching = ref.watch(matchingNotifierProvider);
-    final confidence = matching.confidence ?? 0.94;
+    final confidence = matching.confidence;
 
     return Scaffold(
       body: DecorativeBackground(

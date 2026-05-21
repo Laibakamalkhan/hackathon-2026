@@ -353,7 +353,14 @@ def create_booking(
             "status": "conflict"
         }
 
-    # 3. Create booking
+    # 3. Resolve provider display name for booking history UI
+    provider_name = "Unknown Provider"
+    for p in providers:
+        if p.get("pid") == provider_id:
+            provider_name = p.get("name", provider_name)
+            break
+
+    # 4. Create booking
     bid = f"BK-{uuid.uuid4().hex[:6].upper()}"
     now_iso = datetime.now().isoformat()
 
@@ -361,6 +368,7 @@ def create_booking(
         "bid": bid,
         "user_id": user_id,
         "provider_id": provider_id,
+        "provider_name": provider_name,
         "service_type": service_type,
         "status": "pending",
         "scheduled_time": scheduled_time,

@@ -165,9 +165,11 @@ def create_booking(req: BookingCreateRequest):
     providers = get_all_providers()
     provider_slots = []
     provider_found = False
+    provider_name = "Unknown Provider"
     for p in providers:
         if p.get("pid") == req.provider_id:
             provider_slots = p.get("availability_slots", [])
+            provider_name = p.get("name", provider_name)
             provider_found = True
             break
             
@@ -185,6 +187,7 @@ def create_booking(req: BookingCreateRequest):
         "bid": bid,
         "user_id": req.user_id,
         "provider_id": req.provider_id,
+        "provider_name": provider_name,
         "service_type": req.service_type,
         "status": "pending",
         "scheduled_time": req.scheduled_time,
@@ -359,6 +362,12 @@ class FeedbackRequest(BaseModel):
 
 class BookingStatusRequest(BaseModel):
     status: str
+
+
+class BookingPatchRequest(BaseModel):
+    """PATCH body for /api/v1/booking/{bid}/status — status and/or scheduled_time."""
+    status: Optional[str] = None
+    scheduled_time: Optional[str] = None
 
 
 # ── Endpoints ─────────────────────────────────────────────────────
@@ -561,32 +570,58 @@ async def get_user_bookings(user_id: str):
 
 
 @app.patch("/api/v1/booking/{bid}/status")
-async def update_booking_status(bid: str, req: BookingStatusRequest):
+async def update_booking_status(bid: str, req: BookingPatchRequest):
     """
-    Updates booking status. Valid statuses: confirmed, en_route, in_progress, completed, cancelled.
+    Updates booking status and/or scheduled_time.
+    At least one of status or scheduled_time must be provided.
     """
+    if not req.status and not req.scheduled_time:
+        raise HTTPException(
+            status_code=400,
+            detail="At least one of 'status' or 'scheduled_time' is required."
+        )
+
     valid_statuses = ["confirmed", "en_route", "in_progress", "completed", "cancelled", "pending", "disputed"]
-    if req.status not in valid_statuses:
+    if req.status and req.status not in valid_statuses:
         raise HTTPException(
             status_code=400,
             detail=f"Invalid status '{req.status}'. Must be one of: {valid_statuses}"
         )
 
+    if req.scheduled_time:
+        try:
+            datetime.fromisoformat(req.scheduled_time.replace("Z", "+00:00") if req.scheduled_time.endswith("Z") else req.scheduled_time)
+        except Exception:
+            raise HTTPException(status_code=400, detail="scheduled_time must be valid ISO 8601 format.")
+
+    updated_at = datetime.now().isoformat()
+    update_payload: Dict[str, Any] = {"updated_at": updated_at}
+    if req.status:
+        update_payload["status"] = req.status
+    if req.scheduled_time:
+        update_payload["scheduled_time"] = req.scheduled_time
+
     if not db:
-        return {"bid": bid, "new_status": req.status, "updated_at": datetime.now().isoformat(),
-                "warning": "Firestore unavailable — status not persisted"}
+        return {
+            "bid": bid,
+            "new_status": req.status,
+            "scheduled_time": req.scheduled_time,
+            "updated_at": updated_at,
+            "warning": "Firestore unavailable — changes not persisted"
+        }
 
     try:
-        updated_at = datetime.now().isoformat()
-        db.collection("bookings").document(bid).update({
-            "status": req.status,
-            "updated_at": updated_at
-        })
-        logger.info(f"Booking {bid} status updated to '{req.status}'.")
-        return {"bid": bid, "new_status": req.status, "updated_at": updated_at}
+        db.collection("bookings").document(bid).update(update_payload)
+        logger.info(f"Booking {bid} patched: {update_payload}")
+        return {
+            "bid": bid,
+            "new_status": req.status,
+            "scheduled_time": req.scheduled_time,
+            "updated_at": updated_at,
+        }
     except Exception as e:
         logger.error(f"update_booking_status error: {e}")
-        raise HTTPException(status_code=500, detail=f"Status update failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Booking update failed: {str(e)}")
 
 
 # ── New Agent-Stream WebSocket ────────────────────────────────────

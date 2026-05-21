@@ -51,10 +51,19 @@ class Booking {
     // Resolve booking ID from multiple possible field names.
     final id = (json['bid'] ?? json['booking_id'] ?? json['id'] ?? '').toString();
 
-    // Provider name may come from a nested map or a flat field.
-    final providerName =
-        (json['provider_name'] ?? json['providerName'] ?? 'Unknown Provider')
-            .toString();
+    // Provider name — flat field, camelCase, or nested provider map from handoff.
+    var providerName =
+        (json['provider_name'] ?? json['providerName'] ?? '').toString();
+    if (providerName.isEmpty) {
+      final prov = json['provider'];
+      if (prov is Map) {
+        providerName =
+            (prov['name'] ?? prov['provider_name'] ?? '').toString();
+      }
+    }
+    if (providerName.isEmpty) {
+      providerName = 'Unknown Provider';
+    }
 
     // Service type.
     final service =

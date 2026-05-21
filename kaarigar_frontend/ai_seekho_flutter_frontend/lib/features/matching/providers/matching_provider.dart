@@ -187,20 +187,24 @@ class MatchingNotifier extends StateNotifier<MatchingState> {
 
     Map<String, dynamic>? rawProviderMap;
     for (var p in rawProviders) {
-      if (p['id'] == selected.id || p['provider_id'] == selected.id) {
-        rawProviderMap = p as Map<String, dynamic>;
+      final m = p as Map<String, dynamic>;
+      final pid = (m['pid'] ?? m['id'] ?? m['provider_id'] ?? '').toString();
+      if (pid == selected.id) {
+        rawProviderMap = m;
         break;
       }
     }
 
     if (rawProviderMap != null) {
       fullContext['provider'] = rawProviderMap;
+    } else if (selected.rawJson.isNotEmpty) {
+      fullContext['provider'] = selected.rawJson;
     } else {
       fullContext['provider'] = {
-        'id': selected.id,
+        'pid': selected.id,
         'name': selected.name,
-        'service': selected.service,
-        'price': selected.price,
+        'service_categories': [selected.service],
+        'base_rate_pkr': 500,
       };
     }
 
@@ -211,6 +215,16 @@ class MatchingNotifier extends StateNotifier<MatchingState> {
   }
 
   void reset() => state = const MatchingState();
+
+  /// Clears match results while keeping parsed intent for clarification flows.
+  void clearForClarification() {
+    state = MatchingState(
+      coordinatorResult: state.coordinatorResult,
+      extractedFields: state.extractedFields,
+      confidence: state.confidence,
+      action: 'ask_clarification',
+    );
+  }
 }
 
 // ── Provider ──────────────────────────────────────────────────────────────────

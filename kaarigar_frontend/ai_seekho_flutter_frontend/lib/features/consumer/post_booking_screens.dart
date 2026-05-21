@@ -416,19 +416,37 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
       };
 
   String _headerTitle(String raw) => switch (raw.toLowerCase()) {
-        'en_route'    => 'Provider arriving in',
+        'en_route'    => 'Provider on the way',
         'in_progress' => 'Work in Progress',
         'completed'   => 'Booking Completed',
         _             => 'Status',
       };
 
-  String _headerValue(String raw) => switch (raw.toLowerCase()) {
-        'en_route'    => '~17 min',
-        'in_progress' => '🔧 Active',
-        'completed'   => '✓ Done',
-        'confirmed'   => 'Confirmed',
-        _             => raw,
-      };
+  /// Status-only header — no fabricated ETA until routing/location APIs exist.
+  String _headerValue(String raw, Booking? booking) {
+    switch (raw.toLowerCase()) {
+      case 'en_route':
+        return 'On the way';
+      case 'in_progress':
+        return 'In progress';
+      case 'completed':
+        return 'Done';
+      case 'confirmed':
+      case 'pending':
+        if (booking != null && booking.time.isNotEmpty) {
+          return 'Scheduled ${booking.time}';
+        }
+        return 'Confirmed';
+      default:
+        return raw.isNotEmpty ? raw : '—';
+    }
+  }
+
+  void _showFeatureComingSoon(BuildContext context, String label) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$label — coming soon')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -489,7 +507,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
                       children: [
                         Text(_headerTitle(rawStatus), style: Theme.of(context).textTheme.bodySmall),
                         Text(
-                          _headerValue(rawStatus),
+                          _headerValue(rawStatus, booking),
                           style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800),
                         ),
                       ],
@@ -600,7 +618,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
                   Text('🤖 AI Monitoring Active', style: TextStyle(color: AppColors.textOnDark, fontWeight: FontWeight.w700)),
                   SizedBox(height: 6),
                   Text(
-                    'Tracking provider location · Monitoring ETA · Ready to assist',
+                    'Tracking provider status · Ready to assist',
                     style: TextStyle(color: AppColors.darkTextSecondary, fontSize: 12),
                   ),
                 ],
@@ -612,7 +630,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: () => _showFeatureComingSoon(context, 'Call Provider'),
                     icon: const Icon(Icons.phone_outlined),
                     label: const Text('Call Provider'),
                     style: ElevatedButton.styleFrom(
@@ -626,7 +644,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => context.push(AppRoutes.chatMessaging),
+                    onPressed: () => _showFeatureComingSoon(context, 'In-app chat'),
                     icon: const Icon(Icons.chat_bubble_outline),
                     label: const Text('Chat'),
                     style: OutlinedButton.styleFrom(
@@ -697,8 +715,7 @@ class BookingDetailScreen extends ConsumerStatefulWidget {
 class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
   bool _showCancel = false;
 
-  /// Opens a date + time picker, then PATCHes status to 'confirmed'
-  /// as a lightweight reschedule signal until Phase 4 adds a proper endpoint.
+  /// Opens a date + time picker, then PATCHes [scheduled_time] on the booking.
   Future<void> _showRescheduleSheet(BuildContext ctx, String bid) async {
     final now = DateTime.now();
     final picked = await showDatePicker(
@@ -716,14 +733,18 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
     final scheduled = DateTime(
       picked.year, picked.month, picked.day, time.hour, time.minute,
     );
-    final iso = '${scheduled.toUtc().toIso8601String().substring(0, 16)}Z';
-    // PATCH status to keep booking active; full reschedule API is Phase 4.
-    await ref.read(bookingNotifierProvider.notifier).updateStatus(bid, 'confirmed');
+    final ok = await ref
+        .read(bookingNotifierProvider.notifier)
+        .rescheduleBooking(bid, scheduled);
     if (ctx.mounted) {
       ScaffoldMessenger.of(ctx).showSnackBar(
         SnackBar(
-          content: Text('✓ Rescheduled to $iso (UTC)'),
-          backgroundColor: AppColors.success,
+          content: Text(
+            ok
+                ? '✓ Rescheduled to ${scheduled.toLocal()}'
+                : ref.read(bookingNotifierProvider).error ?? 'Reschedule failed',
+          ),
+          backgroundColor: ok ? AppColors.success : AppColors.error,
         ),
       );
     }
@@ -731,24 +752,48 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final id = ref.watch(selectedBookingIdProvider) ?? 'BSK-2024-1821';
+    final id = ref.watch(selectedBookingIdProvider);
     final allBookings = ref.watch(bookingNotifierProvider).bookings;
-    // Use only real API data; show loader when list is empty.
-    final booking = allBookings.isNotEmpty
-        ? allBookings.firstWhere(
-            (b) => b.id == id,
-            orElse: () => allBookings.first,
+    final booking = id != null && allBookings.isNotEmpty
+        ? allBookings.cast<Booking?>().firstWhere(
+            (b) => b?.id == id,
+            orElse: () => null,
           )
         : null;
 
-    if (booking == null) {
+    final resolvedBooking = booking;
+    if (id == null || resolvedBooking == null) {
       return Scaffold(
         appBar: AppBar(
           leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
           title: const Text('Booking Detail'),
         ),
-        body: const DecorativeBackground(
-          child: Center(child: CircularProgressIndicator(color: AppColors.accentLavender)),
+        body: DecorativeBackground(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(color: AppColors.accentLavender),
+                  const SizedBox(height: 16),
+                  Text(
+                    id == null
+                        ? 'No booking selected. Open one from Bookings.'
+                        : 'Loading booking…',
+                    textAlign: TextAlign.center,
+                  ),
+                  if (id == null) ...[
+                    const SizedBox(height: 16),
+                    OutlinedButton(
+                      onPressed: () => context.go(AppRoutes.bookings),
+                      child: const Text('Go to Bookings'),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
         ),
       );
     }
@@ -767,13 +812,13 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(booking.id, style: const TextStyle(fontWeight: FontWeight.w800)),
+                    Text(resolvedBooking.id, style: const TextStyle(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 8),
-                    Text(booking.service, style: Theme.of(context).textTheme.titleMedium),
-                    Text(booking.providerName),
-                    Text('${booking.date} · ${booking.time}'),
-                    Text(booking.location),
-                    Text(booking.price, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
+                    Text(resolvedBooking.service, style: Theme.of(context).textTheme.titleMedium),
+                    Text(resolvedBooking.providerName),
+                    Text('${resolvedBooking.date} · ${resolvedBooking.time}'),
+                    Text(resolvedBooking.location),
+                    Text(resolvedBooking.price, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
                   ],
                 ),
               ),
@@ -794,7 +839,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                                 // Update status via real API, then go back.
                                 await ref
                                     .read(bookingNotifierProvider.notifier)
-                                    .updateStatus(id, 'cancelled');
+                                    .updateStatus(resolvedBooking.id, 'cancelled');
                                 if (context.mounted) context.go(AppRoutes.bookings);
                               },
                               style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
@@ -807,10 +852,13 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                   ),
                 )
               else ...[
-                PrimaryButton(label: 'Track Live', onPressed: () => context.push(AppRoutes.liveTracking)),
+                PrimaryButton(
+                  label: 'Track Live',
+                  onPressed: () => context.push(AppRoutes.liveTracking),
+                ),
                 const SizedBox(height: 12),
                 OutlinedButton(
-                  onPressed: () => _showRescheduleSheet(context, id),
+                  onPressed: () => _showRescheduleSheet(context, resolvedBooking.id),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
@@ -1010,9 +1058,17 @@ class _DisputeScreenState extends ConsumerState<DisputeScreen> {
       );
       return;
     }
+    final bookingId = ref.read(selectedBookingIdProvider);
+    if (bookingId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Select a booking from history before filing a dispute.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
     setState(() => _isSubmitting = true);
-    final bookingId = ref.read(selectedBookingIdProvider) ?? 'BSK-2024-1821';
-    // Navigate to resolving screen immediately; it auto-navigates when done.
     if (mounted) context.push(AppRoutes.disputeResolving);
     await ref.read(disputeNotifierProvider.notifier).resolve(
       bookingId: bookingId,

@@ -31,7 +31,14 @@ abstract final class IntentDisplayModel {
 
     // ── 2. Location ─────────────────────────────────────────────────────────
     final location = _firstNonEmpty([
-      _str(fields, ['location', 'area', 'location_address', 'address']),
+      _str(fields, [
+        'location_mention',
+        'sector',
+        'location',
+        'area',
+        'location_address',
+        'address',
+      ]),
       fallbackLocation,
     ]);
     if (location.isNotEmpty) {

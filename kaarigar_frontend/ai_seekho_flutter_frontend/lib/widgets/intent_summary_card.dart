@@ -26,7 +26,7 @@ class IntentSummaryCard extends ConsumerWidget {
   const IntentSummaryCard({
     super.key,
     required this.tiles,
-    this.confidence = 0.94,
+    this.confidence,
     this.showEditActions = false,
     this.onConfirm,
     this.onEdit,
@@ -35,7 +35,7 @@ class IntentSummaryCard extends ConsumerWidget {
   });
 
   final List<IntentTileData> tiles;
-  final double confidence;
+  final double? confidence;
   final bool showEditActions;
   final VoidCallback? onConfirm;
   final VoidCallback? onEdit;
@@ -80,23 +80,28 @@ class IntentSummaryCard extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: confidence,
-              minHeight: 8,
-              backgroundColor: AppColors.bgSecondary,
-              color: AppColors.success,
+          if (confidence != null) ...[
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: confidence!.clamp(0.0, 1.0),
+                minHeight: 8,
+                backgroundColor: AppColors.bgSecondary,
+                color: confidence! >= 0.7 ? AppColors.success : AppColors.warning,
+              ),
             ),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text('${(confidence * 100).round()}%', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  '${(confidence! * 100).round()}%',
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                ),
+              ),
             ),
-          ),
+          ],
           const SizedBox(height: 16),
           if (showEditActions) ...[
             Row(

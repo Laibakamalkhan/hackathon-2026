@@ -106,30 +106,44 @@ class ApiService {
 
   /// PATCH /api/v1/booking/{bid}/status
   ///
-  /// Updates the status of an existing booking
-  /// (e.g. "confirmed", "en_route", "completed", "cancelled").
-  Future<Map<String, dynamic>> updateBookingStatus(
-    String bid,
-    String newStatus,
-  ) async {
+  /// Updates status and/or scheduled_time. At least one field is required.
+  Future<Map<String, dynamic>> patchBooking(
+    String bid, {
+    String? status,
+    String? scheduledTime,
+  }) async {
+    if (status == null && scheduledTime == null) {
+      return {'error': 'At least one of status or scheduled_time is required'};
+    }
+    final body = <String, dynamic>{};
+    if (status != null) body['status'] = status;
+    if (scheduledTime != null) body['scheduled_time'] = scheduledTime;
+
     final url = ApiEndpoints.updateBookingStatus(bid);
     try {
       final response = await http.patch(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'status': newStatus}),
+        body: jsonEncode(body),
       );
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
       return {
-        'error': 'Status update failed: ${response.statusCode}',
+        'error': 'Booking patch failed: ${response.statusCode}',
         'body': response.body,
       };
     } catch (e) {
       return {'error': e.toString()};
     }
   }
+
+  /// Updates booking status only (convenience wrapper).
+  Future<Map<String, dynamic>> updateBookingStatus(
+    String bid,
+    String newStatus,
+  ) =>
+      patchBooking(bid, status: newStatus);
 
   // ── WebSocket: Agent Stream ───────────────────────────────────────────────
 

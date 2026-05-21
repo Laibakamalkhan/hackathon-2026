@@ -124,6 +124,53 @@ class BookingNotifier extends StateNotifier<BookingState> {
     }
   }
 
+  /// PATCHes [scheduledTime] to the backend and updates the local booking row.
+  Future<bool> rescheduleBooking(String bid, DateTime scheduledTime) async {
+    try {
+      final iso = scheduledTime.toUtc().toIso8601String();
+      final result = await apiService.patchBooking(
+        bid,
+        scheduledTime: iso,
+      );
+      if (result.containsKey('error')) {
+        state = state.copyWith(
+          error: result['error']?.toString() ?? 'Reschedule failed',
+        );
+        return false;
+      }
+
+      final date = scheduledTime.toIso8601String().split('T').first;
+      final time =
+          '${scheduledTime.hour.toString().padLeft(2, '0')}:${scheduledTime.minute.toString().padLeft(2, '0')}';
+
+      final updated = state.bookings.map((b) {
+        if (b.id != bid) return b;
+        return Booking(
+          id: b.id,
+          providerName: b.providerName,
+          service: b.service,
+          date: date,
+          time: time,
+          location: b.location,
+          price: b.price,
+          status: b.status,
+          canTrack: b.canTrack,
+          providerRating: b.providerRating,
+          providerInitials: b.providerInitials,
+          shortDate: date,
+          timePill: time.isNotEmpty ? 'Aaj $time' : '',
+          apiStatusRaw: b.apiStatusRaw,
+        );
+      }).toList();
+
+      state = state.copyWith(bookings: updated, clearError: true);
+      return true;
+    } catch (e) {
+      state = state.copyWith(error: 'Reschedule failed: ${e.toString()}');
+      return false;
+    }
+  }
+
   BookingStatus _parseStatus(String raw) {
     switch (raw.toLowerCase()) {
       case 'completed':

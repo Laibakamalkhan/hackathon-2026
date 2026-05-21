@@ -8,7 +8,6 @@ import '../../core/l10n/app_strings.dart';
 import '../../core/providers/app_providers.dart';
 import '../../models/user_role.dart';
 import '../../routes/app_routes.dart';
-import '../../services/mock_data_service.dart';
 import '../../widgets/ai_orb_logo.dart';
 import '../../widgets/consumer_bottom_nav.dart';
 import '../../widgets/decorative_background.dart';
@@ -126,9 +125,11 @@ class _ChatHomeScreenState extends ConsumerState<ChatHomeScreen> {
                         spacing: 12,
                         runSpacing: 12,
                         alignment: WrapAlignment.center,
-                        children: MockDataService.quickActions.map((a) {
+                        children: ref.watch(chatQuickActionsProvider).map((a) {
                           return GestureDetector(
-                            onTap: () => _startChat('${a.$2} chahiye', a.$2 == 'Kuch aur?'),
+                            onTap: () => a.opensCustom
+                                ? _startChat()
+                                : _startChat('${a.label} chahiye'),
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                               decoration: BoxDecoration(
@@ -146,9 +147,9 @@ class _ChatHomeScreenState extends ConsumerState<ChatHomeScreen> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(a.$1, style: const TextStyle(fontSize: 18)),
+                                  Text(a.emoji, style: const TextStyle(fontSize: 18)),
                                   const SizedBox(width: 8),
-                                  Text(a.$2, style: const TextStyle(fontWeight: FontWeight.w600)),
+                                  Text(a.label, style: const TextStyle(fontWeight: FontWeight.w600)),
                                 ],
                               ),
                             ),

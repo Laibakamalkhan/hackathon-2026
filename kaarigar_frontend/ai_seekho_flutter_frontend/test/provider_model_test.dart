@@ -113,6 +113,22 @@ void main() {
       expect(booking3.id, equals('BK-789'));
     });
 
+    test('Should resolve provider_name from flat field or nested provider map', () {
+      final fromFlat = Booking.fromJson({
+        'bid': 'BK-1',
+        'provider_name': 'Hassan Mahmood',
+        'scheduled_time': '2026-05-20T11:00:00',
+      });
+      expect(fromFlat.providerName, equals('Hassan Mahmood'));
+
+      final fromNested = Booking.fromJson({
+        'bid': 'BK-2',
+        'provider': {'pid': 'P1', 'name': 'Ali AC Services'},
+        'scheduled_time': '2026-05-20T11:00:00',
+      });
+      expect(fromNested.providerName, equals('Ali AC Services'));
+    });
+
     test('Should parse location address from nested Map or flat fields', () {
       // 1. Nested map with address
       final json1 = {
