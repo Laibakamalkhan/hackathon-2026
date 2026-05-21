@@ -5,8 +5,10 @@ import asyncio
 import uuid
 from typing import Dict, Any, List, Optional
 from datetime import datetime
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Depends, Header
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Depends, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 # Local imports
@@ -34,14 +36,47 @@ app = FastAPI(
     version="1.0.0"
 )
 
+import re
+
+# Parse CORS Origins from settings
+cors_origins_raw = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
+origins = []
+origin_regexes = []
+
+for origin in cors_origins_raw:
+    if "*" in origin:
+        regex_str = re.escape(origin).replace(r"\*", ".*")
+        origin_regexes.append(regex_str)
+    else:
+        origins.append(origin)
+
+cors_kwargs = {
+    "allow_credentials": True,
+    "allow_methods": ["*"],
+    "allow_headers": ["*"],
+}
+
+if origins:
+    cors_kwargs["allow_origins"] = origins
+if origin_regexes:
+    cors_kwargs["allow_origin_regex"] = "^(" + "|".join(origin_regexes) + ")$"
+
 # Enable CORS for frontend integrations (Flutter, React, etc.)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    **cors_kwargs
 )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": "Validation error",
+            "errors": exc.errors(),
+            "message": "The request payload or parameters are invalid or incomplete."
+        }
+    )
 
 # Active WebSocket connections registry
 class ConnectionManager:
@@ -137,7 +172,7 @@ def read_root():
         "status": "online",
         "app": "AI Seekho Engine",
         "firebase_active": db is not None,
-        "gemini_api_active": bool(settings.GEMINI_API_KEY)
+        "gemini_active": bool(settings.GEMINI_API_KEY)
     }
 
 @app.post("/api/match")
