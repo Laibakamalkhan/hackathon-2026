@@ -9,7 +9,7 @@ abstract final class AppTheme {
         useMaterial3: true,
         brightness: Brightness.light,
         scaffoldBackgroundColor: AppColors.bgPrimary,
-        colorScheme: const ColorScheme.light(
+        colorScheme: ColorScheme.light(
           primary: AppColors.accentLavender,
           secondary: AppColors.accentSand,
           surface: AppColors.bgPrimary,

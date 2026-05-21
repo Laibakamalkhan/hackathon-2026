@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -157,7 +158,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   const SizedBox(height: 16),
                   OutlinedButton.icon(
-                    onPressed: () => context.go(AppRoutes.splash),
+                    onPressed: () async {
+                      await FirebaseAuth.instance.signOut();
+                      // Navigate to splash (login) screen after sign-out
+                      context.go(AppRoutes.splash);
+                    },
                     icon: const Icon(Icons.logout, color: AppColors.error),
                     label: const Text('Logout', style: TextStyle(color: AppColors.error)),
                     style: OutlinedButton.styleFrom(
@@ -204,7 +209,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Widget _menuTile(IconData icon, String title, VoidCallback onTap) {
     return ListTile(
-      leading: Icon(icon, color: AppColors.textPrimary),
+      leading: Icon(icon, color: AppColors.textOnDark),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,

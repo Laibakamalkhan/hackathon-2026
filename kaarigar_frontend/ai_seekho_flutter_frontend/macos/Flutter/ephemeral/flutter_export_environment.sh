@@ -1,7 +1,8 @@
 #!/bin/sh
 # This is a generated file; do not edit or check into version control.
-export "FLUTTER_ROOT=C:\src\flutter"
-export "FLUTTER_APPLICATION_PATH=C:\GitHub\ai-seekho-hackathon-2026\kaarigar_frontend\ai_seekho_flutter_frontend"
+export "FLUTTER_ROOT=C:\Users\ESHOP\flutter"
+export "FLUTTER_APPLICATION_PATH=C:\Users\ESHOP\Desktop\ai-seekho-hackathon-2026\kaarigar_frontend\ai_seekho_flutter_frontend"
+export "FLUTTER_FRAMEWORK_SWIFT_PACKAGE_PATH=C:\Users\ESHOP\Desktop\ai-seekho-hackathon-2026\kaarigar_frontend\ai_seekho_flutter_frontend\macos\Flutter\ephemeral\Packages\.packages\FlutterFramework"
 export "COCOAPODS_PARALLEL_CODE_SIGN=true"
 export "FLUTTER_BUILD_DIR=build"
 export "FLUTTER_BUILD_NAME=1.0.0"

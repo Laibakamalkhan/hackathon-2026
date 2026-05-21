@@ -8,6 +8,7 @@ abstract final class AppColors {
   static const accentSand = Color(0xFFD0BEA3);
   static const accentSage = Color(0xFF8F917C);
   static const textPrimary = Color(0xFF1F1F1F);
+
   static const textSecondary = Color(0xFF7B7080);
   static const textOnDark = Color(0xFFF5F4F7);
 
