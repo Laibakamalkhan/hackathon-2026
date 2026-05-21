@@ -8,6 +8,7 @@ import '../features/consumer/browse_profile_screens.dart';
 import '../features/consumer/chat_active_screen.dart';
 import '../features/consumer/chat_home_screen.dart';
 import '../features/consumer/post_booking_screens.dart';
+import '../features/debug/stress_scenarios_screen.dart';
 import '../features/onboarding/language_selection_screen.dart';
 import '../features/onboarding/otp_verify_screen.dart';
 import '../features/onboarding/phone_auth_screen.dart';
@@ -41,7 +42,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.dispute, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const DisputeScreen())),
       GoRoute(path: AppRoutes.liveTracking, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const LiveTrackingScreen())),
       GoRoute(path: AppRoutes.bookingDetail, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const BookingDetailScreen())),
-      GoRoute(path: AppRoutes.chatMessaging, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const ChatMessagingScreen())),
+      GoRoute(
+        path: AppRoutes.chatMessaging,
+        pageBuilder: (_, s) => fadeSlidePage(
+          key: s.pageKey,
+          child: ChatMessagingScreen(bookingId: s.extra as String?),
+        ),
+      ),
       GoRoute(path: AppRoutes.profile, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const ProfileScreen())),
       GoRoute(path: AppRoutes.mapView, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const MapViewScreen())),
       GoRoute(path: AppRoutes.providerProfile, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const ProviderProfileScreen())),
@@ -59,6 +66,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.disputeResolution, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const DisputeResolutionScreen())),
       GoRoute(path: AppRoutes.disputeResolving, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const DisputeResolvingScreen())),
       GoRoute(path: AppRoutes.confidenceMeter, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const ConfidenceMeterScreen())),
+      GoRoute(path: AppRoutes.stressScenarios, pageBuilder: (_, s) => fadeSlidePage(key: s.pageKey, child: const StressScenariosScreen())),
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(child: Text('Page not found: ${state.uri}')),

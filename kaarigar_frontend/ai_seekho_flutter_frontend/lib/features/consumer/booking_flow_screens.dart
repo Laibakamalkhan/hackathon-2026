@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/auth/session_user.dart';
 import '../../core/network/api_service.dart';
 import '../../core/providers/app_providers.dart';
 import '../../features/matching/providers/matching_provider.dart';
@@ -11,7 +12,6 @@ import '../../models/provider_model.dart';
 import '../../models/quote_model.dart';
 import '../../routes/app_routes.dart';
 import '../../services/mock_data_service.dart';
-import '../../services/auth_service.dart';
 import '../../widgets/ai_orb_logo.dart';
 import '../../widgets/decorative_background.dart';
 import '../../widgets/glass_card.dart';
@@ -678,6 +678,9 @@ class _BookingConfirmedScreenState extends ConsumerState<BookingConfirmedScreen>
   bool _isBooking = true;
   String? _bookingId;
   String? _errorMessage;
+  String? _scheduledLabel;
+  int _reminderCount = 0;
+  List<Map<String, dynamic>> _notifications = const [];
 
   @override
   void initState() {
@@ -705,11 +708,26 @@ class _BookingConfirmedScreenState extends ConsumerState<BookingConfirmedScreen>
         if (status == 'success' ||
             status == 'booked' ||
             result['bid'] != null) {
-          final uid = ref.read(authServiceProvider).userId ?? 'user_demo_001';
-          ref.read(bookingNotifierProvider.notifier).loadBookings(uid);
+          ref.read(bookingNotifierProvider.notifier).loadBookings(
+                resolveUserId(ref),
+                backendWasOnline: ref.read(backendOnlineProvider),
+              );
+          final booking = result['booking'];
+          final scheduled = booking is Map
+              ? (booking['scheduled_time'] ?? result['scheduled_time'])?.toString()
+              : result['scheduled_time']?.toString();
+          final reminders = result['reminders'];
+          final notifs = result['notifications'];
           setState(() {
             _isBooking = false;
             _bookingId = (result['bid'] ?? result['booking_id']).toString();
+            _scheduledLabel = _formatScheduled(scheduled);
+            _reminderCount = reminders is List ? reminders.length : 3;
+            if (notifs is List) {
+              _notifications = notifs
+                  .map((n) => Map<String, dynamic>.from(n as Map))
+                  .toList();
+            }
             ref.read(selectedBookingIdProvider.notifier).state = _bookingId;
           });
         } else if (result['status'] == 'conflict') {
@@ -734,9 +752,41 @@ class _BookingConfirmedScreenState extends ConsumerState<BookingConfirmedScreen>
     }
   }
 
+  String _formatScheduled(String? iso) {
+    if (iso == null || iso.isEmpty) return 'Scheduled';
+    if (iso.contains('T')) {
+      final parts = iso.split('T');
+      final time = parts[1].length >= 5 ? parts[1].substring(0, 5) : parts[1];
+      return '${parts[0]} $time';
+    }
+    return iso;
+  }
+
+  ServiceProvider? _resolvedProvider() {
+    final selected = ref.read(selectedProviderProvider);
+    if (selected != null) return selected;
+    final handoff = ref.read(matchingNotifierProvider).handoff;
+    final ctx = handoff?['full_context'];
+    if (ctx is Map && ctx['provider'] is Map) {
+      return ServiceProvider.fromJson(Map<String, dynamic>.from(ctx['provider'] as Map));
+    }
+    final providers = ref.read(matchingNotifierProvider).providers;
+    return providers.isNotEmpty ? providers.first : null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final provider = ref.watch(selectedProviderProvider) ?? MockDataService.providers.first;
+    final provider = _resolvedProvider();
+    if (provider == null && !_isBooking && _errorMessage == null) {
+      return Scaffold(
+        body: Center(
+          child: Text(
+            'Provider details unavailable',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        ),
+      );
+    }
     if (_isBooking) {
       return const Scaffold(
         body: Center(
@@ -800,9 +850,9 @@ class _BookingConfirmedScreenState extends ConsumerState<BookingConfirmedScreen>
                 GlassCard(
                   child: Column(
                     children: [
-                      _detailRow('Service', provider.service),
+                      _detailRow('Service', provider!.service),
                       _detailRow('Provider', provider.name, subtitle: '${provider.rating} · Top Rated'),
-                      _detailRow('Date & Time', 'Kal, 10:00 AM'),
+                      _detailRow('Date & Time', _scheduledLabel ?? 'Scheduled'),
                       _detailRow('Total', ref.watch(matchingNotifierProvider).quote?['total'] != null ? 'PKR ${ref.watch(matchingNotifierProvider).quote!["total"]}' : 'PKR 880', highlight: true),
                       if (_bookingId != null)
                         _detailRow('Booking ID', '#$_bookingId'),
@@ -810,9 +860,18 @@ class _BookingConfirmedScreenState extends ConsumerState<BookingConfirmedScreen>
                       _infoBox(
                         Icons.alarm,
                         'Reminder Set',
-                        '9:00 AM notification scheduled',
+                        '$_reminderCount reminders scheduled (simulated)',
                         AppColors.success.withValues(alpha: 0.25),
                       ),
+                      if (_notifications.isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        _infoBox(
+                          Icons.sms_outlined,
+                          'SMS & WhatsApp sent',
+                          _notifications.first['body']?.toString() ?? '',
+                          AppColors.accentSand.withValues(alpha: 0.35),
+                        ),
+                      ],
                       const SizedBox(height: 10),
                       _infoBox(Icons.smart_toy_outlined, 'AI agents will monitor your booking', '', AppColors.textSecondary.withValues(alpha: 0.15)),
                     ],
@@ -916,7 +975,16 @@ class ProviderProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final p = ref.watch(selectedProviderProvider) ?? MockDataService.providers.first;
+    final p = ref.watch(selectedProviderProvider) ??
+        (ref.watch(matchingNotifierProvider).providers.isNotEmpty
+            ? ref.watch(matchingNotifierProvider).providers.first
+            : null);
+    if (p == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Provider')),
+        body: const Center(child: Text('Select a provider from ranking')),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),

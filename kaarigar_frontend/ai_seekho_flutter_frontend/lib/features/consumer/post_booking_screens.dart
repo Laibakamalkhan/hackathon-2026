@@ -14,7 +14,9 @@ import '../../features/dispute/providers/dispute_provider.dart';
 import '../../core/constants/dispute_types.dart';
 import '../../models/booking_model.dart';
 import '../../routes/app_routes.dart';
-import '../../services/auth_service.dart';
+import '../../core/auth/session_user.dart';
+import '../../features/chat/providers/booking_chat_provider.dart';
+import '../../main.dart';
 
 import '../../widgets/consumer_bottom_nav.dart';
 import '../../widgets/decorative_background.dart';
@@ -39,8 +41,11 @@ class _BookingHistoryScreenState extends ConsumerState<BookingHistoryScreen> {
     super.initState();
     // Fetch real bookings from the backend after the first frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final uid = ref.read(authServiceProvider).userId ?? 'user_demo_001';
-      ref.read(bookingNotifierProvider.notifier).loadBookings(uid);
+      final uid = resolveUserId(ref);
+      ref.read(bookingNotifierProvider.notifier).loadBookings(
+            uid,
+            backendWasOnline: ref.read(backendOnlineProvider),
+          );
     });
   }
 
@@ -88,8 +93,11 @@ class _BookingHistoryScreenState extends ConsumerState<BookingHistoryScreen> {
                     ),
                     TextButton(
                       onPressed: () {
-                        final uid = ref.read(authServiceProvider).userId ?? 'user_demo_001';
-                        ref.read(bookingNotifierProvider.notifier).loadBookings(uid);
+                        final uid = resolveUserId(ref);
+                        ref.read(bookingNotifierProvider.notifier).loadBookings(
+            uid,
+            backendWasOnline: ref.read(backendOnlineProvider),
+          );
                       },
                       child: const Text('Retry', style: TextStyle(fontSize: 12)),
                     ),
@@ -396,7 +404,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
   void _startPolling() {
     final bid = ref.read(selectedBookingIdProvider);
     if (bid == null || !mounted) return;
-    final uid = ref.read(authServiceProvider).userId ?? 'user_demo_001';
+    final uid = resolveUserId(ref);
     ref.read(bookingNotifierProvider.notifier).fetchBooking(bid, currentUserId: uid);
     // Then every 10 s while mounted.
     _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
@@ -425,11 +433,11 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
         _             => 'Status',
       };
 
-  /// Status-only header — no fabricated ETA until routing/location APIs exist.
   String _headerValue(String raw, Booking? booking) {
     switch (raw.toLowerCase()) {
       case 'en_route':
-        return 'On the way';
+        final eta = booking?.etaMinutes;
+        return eta != null ? '~$eta min' : 'On the way';
       case 'in_progress':
         return 'In progress';
       case 'completed':
@@ -445,9 +453,17 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
     }
   }
 
-  void _showFeatureComingSoon(BuildContext context, String label) {
+  void _openBookingChat(BuildContext context, String? bid) {
+    if (bid == null) return;
+    context.push(AppRoutes.chatMessaging, extra: bid);
+  }
+
+  Future<void> _callProvider(BuildContext context, Booking? booking) async {
+    if (booking == null) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$label — coming soon')),
+      SnackBar(
+        content: Text('Calling ${booking.providerName} (simulated)'),
+      ),
     );
   }
 
@@ -633,7 +649,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => _showFeatureComingSoon(context, 'Call Provider'),
+                    onPressed: () => _callProvider(context, booking),
                     icon: const Icon(Icons.phone_outlined),
                     label: const Text('Call Provider'),
                     style: ElevatedButton.styleFrom(
@@ -647,7 +663,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => _showFeatureComingSoon(context, 'In-app chat'),
+                    onPressed: () => _openBookingChat(context, bid),
                     icon: const Icon(Icons.chat_bubble_outline),
                     label: const Text('Chat'),
                     style: OutlinedButton.styleFrom(
@@ -913,7 +929,7 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
     }
     setState(() => _isSubmitting = true);
     try {
-      final uid = ref.read(authServiceProvider).userId ?? 'user_demo_001';
+      final uid = resolveUserId(ref);
       await apiService.submitFeedback(
         bookingId: bookingId,
         rating: _rating.toDouble(),
@@ -984,57 +1000,122 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
   }
 }
 
-class ChatMessagingScreen extends StatelessWidget {
-  const ChatMessagingScreen({super.key});
+class ChatMessagingScreen extends ConsumerStatefulWidget {
+  const ChatMessagingScreen({super.key, this.bookingId});
+
+  final String? bookingId;
+
+  @override
+  ConsumerState<ChatMessagingScreen> createState() => _ChatMessagingScreenState();
+}
+
+class _ChatMessagingScreenState extends ConsumerState<ChatMessagingScreen> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final messages = [
-      ('provider', 'Assalam o Alaikum, main 20 min mein pohanchunga'),
-      ('user', 'Theek hai, main wait kar rahi hoon'),
-    ];
+    final bid = widget.bookingId ?? ref.watch(selectedBookingIdProvider) ?? '';
+    if (bid.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Chat')),
+        body: const Center(child: Text('No booking selected for chat')),
+      );
+    }
+    final chat = ref.watch(bookingChatNotifierProvider(bid));
+    final bookings = ref.watch(bookingNotifierProvider).bookings;
+    final booking = bookings.cast<Booking?>().firstWhere(
+          (b) => b?.id == bid,
+          orElse: () => null,
+        );
+    final title = booking?.providerName ?? 'Provider';
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ali AC Services'),
+        title: Text(title),
         actions: [
-          IconButton(icon: const Icon(Icons.info_outline), onPressed: () => context.push(AppRoutes.bookingDetail)),
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () => context.push(AppRoutes.bookingDetail),
+          ),
         ],
       ),
       body: Column(
         children: [
+          if (chat.isLoading) const LinearProgressIndicator(minHeight: 2),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(16),
-              children: messages.map((m) {
-                final isUser = m.$1 == 'user';
-                return Align(
-                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isUser ? AppColors.accentLavender.withValues(alpha: 0.4) : AppColors.glassFill,
-                      borderRadius: BorderRadius.circular(16),
+              children: [
+                if (chat.messages.isEmpty && !chat.isLoading)
+                  const Center(
+                    child: Text(
+                      'Start conversation with your provider',
+                      style: TextStyle(color: AppColors.textSecondary),
                     ),
-                    child: Text(m.$2),
                   ),
-                );
-              }).toList(),
+                ...chat.messages.map((m) {
+                  final role = (m['sender_role'] ?? '').toString();
+                  final isUser = role == 'consumer';
+                  return Align(
+                    alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isUser
+                            ? AppColors.accentLavender.withValues(alpha: 0.4)
+                            : AppColors.glassFill,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text((m['text'] ?? '').toString()),
+                    ),
+                  );
+                }),
+              ],
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                IconButton(onPressed: () {}, icon: const Icon(Icons.attach_file)),
-                const Expanded(child: TextField(decoration: InputDecoration(hintText: 'Message...', filled: true))),
-                IconButton(onPressed: () {}, icon: const Icon(Icons.send)),
+                IconButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Attachment stored as metadata (simulated)')),
+                    );
+                  },
+                  icon: const Icon(Icons.attach_file),
+                ),
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: const InputDecoration(hintText: 'Message...', filled: true),
+                    onSubmitted: (_) => _send(bid),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => _send(bid),
+                  icon: const Icon(Icons.send),
+                ),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  void _send(String bid) {
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
+    _controller.clear();
+    ref.read(bookingChatNotifierProvider(bid).notifier).send(bid, text);
   }
 }
 
@@ -1113,7 +1194,10 @@ class _DisputeScreenState extends ConsumerState<DisputeScreen> {
               OutlinedButton.icon(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Evidence upload coming soon')),
+                    const SnackBar(
+                      content: Text('Photo evidence metadata saved (simulated)'),
+                      backgroundColor: AppColors.success,
+                    ),
                   );
                 },
                 icon: const Icon(Icons.upload),
@@ -1172,7 +1256,7 @@ class DisputeResolutionScreen extends ConsumerWidget {
                         bookingId: disputeState.lastBookingId!,
                         disputeType: disputeState.lastDisputeType!,
                         description: disputeState.lastDescription!,
-                        userId: disputeState.lastUserId ?? ref.read(authServiceProvider).userId ?? 'user_demo_001',
+                        userId: disputeState.lastUserId ?? resolveUserId(ref),
                       );
                     },
                   ),
@@ -1241,8 +1325,11 @@ class DisputeResolutionScreen extends ConsumerWidget {
                 onPressed: () {
                   ref.read(disputeNotifierProvider.notifier).reset();
                   // Re-fetch bookings after resolution accepts
-                  final uid = ref.read(authServiceProvider).userId ?? 'user_demo_001';
-                  ref.read(bookingNotifierProvider.notifier).loadBookings(uid);
+                  final uid = resolveUserId(ref);
+                  ref.read(bookingNotifierProvider.notifier).loadBookings(
+            uid,
+            backendWasOnline: ref.read(backendOnlineProvider),
+          );
                   context.go(AppRoutes.bookings);
                 },
               ),

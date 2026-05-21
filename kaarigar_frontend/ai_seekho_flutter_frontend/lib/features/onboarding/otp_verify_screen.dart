@@ -5,8 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/auth/firebase_bootstrap.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/providers/app_providers.dart';
 import '../../routes/app_routes.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/decorative_background.dart';
 import '../../widgets/gradient_cta_button.dart';
 
@@ -76,12 +79,47 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                   '${_seconds ~/ 60}:${(_seconds % 60).toString().padLeft(2, '0')} mein expire hoga',
                   style: const TextStyle(color: AppColors.warning, fontWeight: FontWeight.w600),
                 ),
-                TextButton(onPressed: () {}, child: const Text('Dobara Bhejein')),
+                TextButton(
+                  onPressed: () {
+                    final firebaseOn = ref.read(firebaseEnabledProvider);
+                    if (!firebaseOn) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Demo mode: enter any 6-digit OTP')),
+                      );
+                      return;
+                    }
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('OTP resent via Firebase')),
+                    );
+                  },
+                  child: const Text('Dobara Bhejein'),
+                ),
                 const Spacer(),
                 GradientCtaButton(
                   label: 'Verify Karein',
                   enabled: _otp.length == 6,
-                  onPressed: () => context.go(AppRoutes.setupProfile),
+                  onPressed: () async {
+                    final firebaseOn = ref.read(firebaseEnabledProvider);
+                    if (!firebaseOn) {
+                      activateDemoSession(
+                        phoneDigits: ref.read(phoneProvider),
+                      );
+                      if (context.mounted) context.go(AppRoutes.setupProfile);
+                      return;
+                    }
+                    final ok = await ref.read(authServiceProvider).verifyOtp(_otp);
+                    if (!context.mounted) return;
+                    if (ok) {
+                      context.go(AppRoutes.setupProfile);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('OTP verify nahi hua — dobara try karein'),
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                    }
+                  },
                 ),
               ],
             ),

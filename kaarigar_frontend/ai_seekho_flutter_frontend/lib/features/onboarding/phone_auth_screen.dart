@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/l10n/app_strings.dart';
+import '../../core/auth/firebase_bootstrap.dart';
 import '../../core/providers/app_providers.dart';
 import '../../routes/app_routes.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/decorative_background.dart';
 import '../../widgets/gradient_cta_button.dart';
 import '../../widgets/phone_input_field.dart';
@@ -77,9 +79,28 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> {
                 const Spacer(),
                 GradientCtaButton(
                   label: s.sendOtp,
-                  onPressed: () {
-                    ref.read(phoneProvider.notifier).state = _controller.text;
-                    context.go(AppRoutes.otpVerify);
+                  onPressed: () async {
+                    final phone = _controller.text.trim();
+                    ref.read(phoneProvider.notifier).state = phone;
+                    final firebaseOn = ref.read(firebaseEnabledProvider);
+                    if (!firebaseOn) {
+                      activateDemoSession(phoneDigits: phone);
+                      if (context.mounted) context.go(AppRoutes.otpVerify);
+                      return;
+                    }
+                    final auth = ref.read(authServiceProvider);
+                    await auth.signInWithPhone(
+                      phone.startsWith('+') ? phone : '+92$phone',
+                      onCodeSent: (_) {
+                        if (context.mounted) context.go(AppRoutes.otpVerify);
+                      },
+                      onError: (msg) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(msg)),
+                        );
+                      },
+                    );
                   },
                 ),
               ],

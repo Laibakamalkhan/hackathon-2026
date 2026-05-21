@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import 'providers/provider_jobs_provider.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/theme/app_typography.dart';
@@ -9,25 +12,43 @@ import '../../widgets/glass_card.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/provider_bottom_nav.dart';
 
-class ProviderDashboardScreen extends StatefulWidget {
+class ProviderDashboardScreen extends ConsumerStatefulWidget {
   const ProviderDashboardScreen({super.key});
 
   @override
-  State<ProviderDashboardScreen> createState() => _ProviderDashboardScreenState();
+  ConsumerState<ProviderDashboardScreen> createState() => _ProviderDashboardScreenState();
 }
 
-class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
+class _ProviderDashboardScreenState extends ConsumerState<ProviderDashboardScreen> {
   String _tab = 'upcoming';
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(providerDashboardNotifierProvider.notifier).load(defaultProviderId);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final upcoming = [
-      ('Zainab K.', 'AC Repair', '11:30 AM', 'G-13/3', 'PKR 880', true),
-    ];
-    final active = [
-      ('Ahmed M.', 'AC Installation', '2:00 PM', 'F-10/4', 'PKR 1,200', false),
-    ];
-    final jobs = _tab == 'upcoming' ? upcoming : active;
+    final state = ref.watch(providerDashboardNotifierProvider);
+    final dash = state.dashboard;
+    final name = (dash?['provider_name'] ?? 'Ali AC Services').toString();
+    final earnings = 'PKR ${dash?['earnings_today_pkr'] ?? 0}';
+    final completed = '${dash?['jobs_completed_today'] ?? 0}';
+    final rating = '${dash?['avg_rating'] ?? 4.8} ⭐';
+
+    List<Map<String, dynamic>> jobs = [];
+    if (_tab == 'upcoming') {
+      jobs = (dash?['upcoming'] as List<dynamic>? ?? state.bookings)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+    } else {
+      jobs = (dash?['active'] as List<dynamic>? ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+    }
     return Scaffold(
       backgroundColor: AppColors.darkBg,
       body: DecorativeBackground(
@@ -45,7 +66,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Assalam o Alaikum', style: AppTypography.darkBody(14)),
-                        Text('Ali AC Services 👋', style: AppTypography.darkTitle(24)),
+                        Text('$name 👋', style: AppTypography.darkTitle(24)),
                       ],
                     ),
                     Row(
@@ -65,11 +86,11 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   children: [
-                    _stat('PKR 3,240', 'Aaj ki earnings', AppColors.success),
+                    _stat(earnings, 'Aaj ki earnings', AppColors.success),
                     const SizedBox(width: 8),
-                    _stat('4', 'Jobs mukammal', AppColors.accentLavender),
+                    _stat(completed, 'Jobs mukammal', AppColors.accentLavender),
                     const SizedBox(width: 8),
-                    _stat('4.8 ⭐', 'Avg. rating', AppColors.warning),
+                    _stat(rating, 'Avg. rating', AppColors.warning),
                   ],
                 ),
               ),
@@ -89,6 +110,12 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   itemCount: jobs.length,
                   itemBuilder: (_, i) {
                     final j = jobs[i];
+                    final bid = (j['bid'] ?? '').toString();
+                    final service = (j['service_type'] ?? 'Service').toString();
+                    final time = (j['scheduled_time'] ?? '').toString();
+                    final loc = j['location'] is Map
+                        ? (j['location']['address'] ?? '').toString()
+                        : '';
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: GlassCard(
@@ -96,22 +123,41 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Text(bid, style: const TextStyle(color: AppColors.textOnDark, fontWeight: FontWeight.w700)),
+                            Text(service, style: TextStyle(color: AppColors.textOnDark.withValues(alpha: 0.7))),
+                            Text('$time · $loc', style: TextStyle(color: AppColors.textOnDark.withValues(alpha: 0.55), fontSize: 12)),
+                            const SizedBox(height: 8),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(j.$1, style: const TextStyle(color: AppColors.textOnDark, fontWeight: FontWeight.w700)),
-                                if (j.$6)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(color: AppColors.urgent.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(8)),
-                                    child: const Text('Urgent', style: TextStyle(fontSize: 10, color: AppColors.textOnDark)),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      final ok = await ref
+                                          .read(providerDashboardNotifierProvider.notifier)
+                                          .updateJobStatus(bid, 'en_route');
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text(ok ? 'Status: en_route' : 'Update failed')),
+                                        );
+                                      }
+                                    },
+                                    child: const Text('Start Job'),
                                   ),
+                                ),
+                                const SizedBox(width: 8),
+                                OutlinedButton(
+                                  onPressed: () async {
+                                    await ref
+                                        .read(providerDashboardNotifierProvider.notifier)
+                                        .updateJobStatus(bid, 'cancelled');
+                                    if (context.mounted) {
+                                      context.push(AppRoutes.providerCancelled);
+                                    }
+                                  },
+                                  child: const Text('Cancel'),
+                                ),
                               ],
                             ),
-                            Text(j.$2, style: TextStyle(color: AppColors.textOnDark.withValues(alpha: 0.7))),
-                            Text('${j.$3} · ${j.$4}', style: TextStyle(color: AppColors.textOnDark.withValues(alpha: 0.55), fontSize: 12)),
-                            const SizedBox(height: 8),
-                            Text(j.$5, style: const TextStyle(color: AppColors.accentLavender, fontWeight: FontWeight.w700)),
                           ],
                         ),
                       ),
@@ -334,7 +380,17 @@ class ProviderEnRouteScreen extends StatelessWidget {
                 const Text('Zainab K.', style: TextStyle(color: AppColors.textOnDark, fontWeight: FontWeight.w700, fontSize: 18)),
                 Text('AC Repair · G-13/3', style: TextStyle(color: AppColors.textOnDark.withValues(alpha: 0.55))),
                 const SizedBox(height: 16),
-                PrimaryButton(label: 'Open Navigation', dark: true, onPressed: () {}),
+                PrimaryButton(
+                  label: 'Open Navigation',
+                  dark: true,
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Navigation: G-13/3 Islamabad (maps deep link simulated)'),
+                      ),
+                    );
+                  },
+                ),
                 const SizedBox(height: 12),
                 OutlinedButton(
                   onPressed: () => context.go(AppRoutes.providerDashboard),

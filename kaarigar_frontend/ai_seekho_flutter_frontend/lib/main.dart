@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/auth/firebase_bootstrap.dart';
 import 'core/constants/api_endpoints.dart';
 import 'core/network/http_client.dart';
 import 'core/theme/app_theme.dart';
@@ -28,6 +29,9 @@ void main() async {
     ),
   );
 
+  final firebaseReady = await bootstrapFirebase();
+  activateDemoSession();
+
   // Non-blocking ping — result is available to the app via backendOnlineProvider.
   final isOnline = await _pingBackend().timeout(
     const Duration(seconds: 3),
@@ -38,6 +42,7 @@ void main() async {
     ProviderScope(
       overrides: [
         backendOnlineProvider.overrideWithValue(isOnline),
+        firebaseEnabledProvider.overrideWithValue(firebaseReady),
       ],
       child: const KarigarApp(),
     ),

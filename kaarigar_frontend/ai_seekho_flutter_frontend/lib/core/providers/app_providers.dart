@@ -2,8 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/provider_model.dart';
 import '../../models/user_role.dart';
-import '../../services/mock_data_service.dart';
-
 /// Preset service shortcuts on chat home — wired into [ChatHomeScreen._startChat].
 class ChatQuickAction {
   const ChatQuickAction({
@@ -36,8 +34,14 @@ final userProfileProvider = StateProvider<UserProfile>((ref) {
 
 final selectedProviderProvider = StateProvider<ServiceProvider?>((ref) => null);
 
-final intentChipsProvider =
-    StateProvider<List<String>>((ref) => List.from(MockDataService.intentChips));
+const defaultIntentChips = [
+  'AC repair',
+  'Plumber',
+  'Electrician',
+  'G-13 sector',
+];
+
+final intentChipsProvider = Provider<List<String>>((ref) => defaultIntentChips);
 
 final selectedBookingIdProvider = StateProvider<String?>((ref) => null);
 

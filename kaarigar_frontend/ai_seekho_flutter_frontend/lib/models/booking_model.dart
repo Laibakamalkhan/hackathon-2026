@@ -16,6 +16,7 @@ class Booking {
     this.shortDate = '',
     this.timePill = '',
     this.apiStatusRaw = '',
+    this.distanceKm = 0,
   });
 
   final String id;
@@ -38,6 +39,9 @@ class Booking {
   /// "confirmed", "completed", "cancelled"). Use this for timeline
   /// step mapping; [status] is the coarser UI enum.
   final String apiStatusRaw;
+
+  /// Distance in km from coordinate/matching (for ETA estimate).
+  final double distanceKm;
 
   String get initials =>
       providerInitials.isNotEmpty
@@ -136,6 +140,14 @@ class Booking {
       shortDate: date,
       timePill: time.isNotEmpty ? 'Aaj $time' : '',
       apiStatusRaw: rawStatus,
+      distanceKm: (json['distance_km'] as num?)?.toDouble() ?? 0,
     );
+  }
+
+  /// Rough ETA minutes when status is en_route (matches backend heuristic).
+  int? get etaMinutes {
+    if (apiStatusRaw.toLowerCase() != 'en_route') return null;
+    if (distanceKm <= 0) return 15;
+    return (distanceKm / 25.0 * 60 + 5).round().clamp(8, 90);
   }
 }

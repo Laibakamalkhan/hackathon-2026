@@ -1,20 +1,42 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/auth/session_user.dart';
+import '../../core/network/api_service.dart';
 import '../../core/providers/app_providers.dart';
+import '../../features/booking/providers/booking_provider.dart';
+import '../../main.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/consumer_bottom_nav.dart';
+import '../../models/booking_model.dart';
 import '../providers/providers_list_provider.dart';
 import '../../widgets/decorative_background.dart';
 import '../../widgets/glass_card.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(bookingNotifierProvider.notifier).loadBookings(
+            resolveUserId(ref),
+            backendWasOnline: ref.read(backendOnlineProvider),
+          );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final profile = ref.watch(userProfileProvider);
     final displayName = profile.name.isNotEmpty ? profile.name : 'Ayesha Malik';
     final location = profile.area.isNotEmpty ? '${profile.area}, ${profile.city}' : 'G-13, Islamabad';
@@ -58,14 +80,25 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      _profileStat('12', 'Bookings'),
-                      const SizedBox(width: 10),
-                      _profileStat('4.9', 'Rating'),
-                      const SizedBox(width: 10),
-                      _profileStat('Ag', 'Silver'),
-                    ],
+                  Builder(
+                    builder: (context) {
+                      final bookings = ref.watch(bookingNotifierProvider).bookings;
+                      final count = bookings.length.toString();
+                      final avgRating = bookings.isEmpty
+                          ? '—'
+                          : (bookings.map((b) => b.providerRating).reduce((a, b) => a + b) /
+                                  bookings.length)
+                              .toStringAsFixed(1);
+                      return Row(
+                        children: [
+                          _profileStat(count, 'Bookings'),
+                          const SizedBox(width: 10),
+                          _profileStat(avgRating, 'Avg rating'),
+                          const SizedBox(width: 10),
+                          _profileStat(bookings.where((b) => b.status == BookingStatus.active).length.toString(), 'Active'),
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 16),
                   GlassCard(
@@ -113,6 +146,12 @@ class ProfileScreen extends ConsumerWidget {
                         _menuTile(Icons.help_outline, 'FAQ', () {}),
                         _menuTile(Icons.map_outlined, 'Map View', () => context.push(AppRoutes.mapView)),
                         _menuTile(Icons.history, 'Booking History', () => context.go(AppRoutes.bookings)),
+                        if (kDebugMode)
+                          _menuTile(
+                            Icons.science_outlined,
+                            'Stress Scenarios (Demo)',
+                            () => context.push(AppRoutes.stressScenarios),
+                          ),
                       ],
                     ),
                   ),
@@ -339,11 +378,58 @@ class NoProvidersScreen extends StatelessWidget {
   }
 }
 
-class ProviderCancelledScreen extends StatelessWidget {
+class ProviderCancelledScreen extends ConsumerStatefulWidget {
   const ProviderCancelledScreen({super.key});
 
   @override
+  ConsumerState<ProviderCancelledScreen> createState() => _ProviderCancelledScreenState();
+}
+
+class _ProviderCancelledScreenState extends ConsumerState<ProviderCancelledScreen> {
+  Map<String, dynamic>? _result;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _reschedule();
+  }
+
+  Future<void> _reschedule() async {
+    final bid = ref.read(selectedBookingIdProvider);
+    if (bid == null) {
+      setState(() {
+        _loading = false;
+        _result = {'status': 'error', 'message': 'No booking selected'};
+      });
+      return;
+    }
+    try {
+      final res = await apiService.autoRescheduleBooking(bid);
+      setState(() {
+        _loading = false;
+        _result = res;
+      });
+      if (res['status'] == 'rescheduled') {
+        ref.read(bookingNotifierProvider.notifier).loadBookings(
+              resolveUserId(ref),
+              backendWasOnline: ref.read(backendOnlineProvider),
+            );
+      }
+    } catch (e) {
+      setState(() {
+        _loading = false;
+        _result = {'status': 'error', 'message': e.toString()};
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final alt = _result?['alternate_provider'] as Map<String, dynamic>?;
+    final altName = alt?['name'] ?? 'Alternate provider';
+    final msg = (_result?['message'] ?? '').toString();
+
     return Scaffold(
       body: DecorativeBackground(
         child: Padding(
@@ -355,11 +441,19 @@ class ProviderCancelledScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Text('Provider cancelled', style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 8),
-              const Text('AI ne doosra best provider dhund liya: Hassan Cool Tech'),
+              if (_loading)
+                const CircularProgressIndicator()
+              else
+                Text(
+                  msg.isNotEmpty ? msg : 'AI ne doosra provider dhund raha hai: $altName',
+                  textAlign: TextAlign.center,
+                ),
               const SizedBox(height: 32),
               ElevatedButton(
-                onPressed: () => context.go(AppRoutes.bookingConfirmed),
-                child: const Text('Accept New Booking'),
+                onPressed: _result?['status'] == 'rescheduled'
+                    ? () => context.go(AppRoutes.bookings)
+                    : null,
+                child: const Text('View Updated Booking'),
               ),
               const SizedBox(height: 12),
               OutlinedButton(

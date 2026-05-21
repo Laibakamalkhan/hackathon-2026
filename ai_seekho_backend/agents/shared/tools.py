@@ -364,13 +364,26 @@ def create_booking(
     bid = f"BK-{uuid.uuid4().hex[:6].upper()}"
     now_iso = datetime.now().isoformat()
 
+    from services.notification_service import simulate_booking_notifications
+
+    total_pkr = 0
+    if isinstance(price_quote, dict):
+        q = price_quote.get("quote") or price_quote
+        if isinstance(q, dict):
+            inner = q.get("quote") if isinstance(q.get("quote"), dict) else q
+            total_pkr = inner.get("total_pkr") or inner.get("total") or 0
+
+    notifications = simulate_booking_notifications(
+        bid, provider_name, scheduled_time, total_pkr
+    )
+
     booking_payload = {
         "bid": bid,
         "user_id": user_id,
         "provider_id": provider_id,
         "provider_name": provider_name,
         "service_type": service_type,
-        "status": "pending",
+        "status": "confirmed",
         "scheduled_time": scheduled_time,
         "location": {
             "address": location_address,
@@ -380,6 +393,7 @@ def create_booking(
         "price_quote": price_quote,
         "intent_raw": intent_raw,
         "intent_parsed": intent_parsed,
+        "notifications": notifications,
         "created_at": now_iso,
         "updated_at": now_iso
     }

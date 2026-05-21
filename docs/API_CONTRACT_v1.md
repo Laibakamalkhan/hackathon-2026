@@ -176,3 +176,45 @@ Aliases accepted by backend: `poor_service`, `poor service`, `overcharged`, `no 
 **GET** `/api/providers` — returns `{ "providers": [ { "pid", "name", "service_categories", … } ] }`
 
 Provider id field for matching/handoff: **`pid`** (Flutter also accepts `id`, `provider_id` defensively).
+
+---
+
+## Provider APIs
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/v1/provider/{pid}/dashboard` | Earnings, upcoming/active job lists |
+| GET | `/api/v1/provider/{pid}/bookings` | All bookings for provider |
+| PATCH | `/api/v1/provider/booking/{bid}/status` | Provider sets `en_route`, `in_progress`, `completed`, `cancelled` |
+
+---
+
+## Booking extras
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/v1/booking/{bid}/auto-reschedule` | Alternate provider after cancel |
+| GET | `/api/v1/booking/{bid}/messages` | Chat thread |
+| POST | `/api/v1/booking/{bid}/messages` | `{sender_id, sender_role, text}` |
+| GET | `/api/v1/booking/{bid}/eta` | `{eta_minutes, distance_km, status}` |
+
+---
+
+## Antigravity workflow metadata
+
+Coordinate / execute / resolve responses may include:
+
+```json
+{
+  "antigravity": {
+    "workflow_id": "AGW-…",
+    "platform": "Google Antigravity Workflow Bridge",
+    "nodes_executed": ["Coordinate", "Execute"],
+    "sdk_available": false
+  }
+}
+```
+
+`GET /` root payload includes `"antigravity": { … }` platform status.
+
+Bookings may include `"notifications": [{ "channel": "sms"|"whatsapp", "body": "…" }]`.

@@ -180,11 +180,20 @@ class ExecutorAgent:
 
         # Step 4: Update Firestore booking with agent trace reference
         agent_trace_id = f"TRACE-{uuid.uuid4().hex[:8].upper()}"
+        from services.notification_service import simulate_booking_notifications
+
+        notifications = simulate_booking_notifications(
+            bid, provider.get("name", "Technician"), scheduled_time,
+            quote_result.get("quote", {}).get("total_pkr")
+        )
         if db:
             try:
                 db.collection("bookings").document(bid).update({
                     "agent_trace_id": agent_trace_id,
                     "executor_processed": True,
+                    "distance_km": distance_km,
+                    "notifications": notifications,
+                    "status": "confirmed",
                     "updated_at": self._now_iso()
                 })
             except Exception as e:
@@ -231,8 +240,14 @@ class ExecutorAgent:
             "confirmation_message_en": confirmation_en,
             "reminders_scheduled": [r["trigger_at"] for r in reminders],
             "reminders": reminders,
+            "notifications": notifications,
             "agent_trace_id": agent_trace_id,
             "trace_events": trace_events,
+            "antigravity": {
+                "workflow_id": agent_trace_id,
+                "nodes_executed": ["Coordinate", "Execute"],
+                "platform": "Google Antigravity Workflow Bridge",
+            },
             "escalation_needed": False,
             "escalation_reason": None
         }

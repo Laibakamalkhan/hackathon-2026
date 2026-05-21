@@ -145,6 +145,57 @@ class ApiService {
   ) =>
       patchBooking(bid, status: newStatus);
 
+  // ── Provider APIs ─────────────────────────────────────────────────────────
+
+  Future<Map<String, dynamic>> getProviderDashboard(String providerId) async {
+    return _client.get('${ApiEndpoints.baseHttpUrl}/api/v1/provider/$providerId/dashboard');
+  }
+
+  Future<Map<String, dynamic>> getProviderBookings(String providerId) async {
+    return _client.get('${ApiEndpoints.baseHttpUrl}/api/v1/provider/$providerId/bookings');
+  }
+
+  Future<Map<String, dynamic>> providerUpdateBookingStatus(
+    String bid,
+    String status,
+  ) async {
+    return _client.patch(
+      '${ApiEndpoints.baseHttpUrl}/api/v1/provider/booking/$bid/status',
+      {'status': status},
+    );
+  }
+
+  Future<Map<String, dynamic>> autoRescheduleBooking(String bid) async {
+    return _client.post(
+      '${ApiEndpoints.baseHttpUrl}/api/v1/booking/$bid/auto-reschedule',
+      {},
+    );
+  }
+
+  Future<Map<String, dynamic>> getBookingEta(String bid) async {
+    return _client.get('${ApiEndpoints.baseHttpUrl}/api/v1/booking/$bid/eta');
+  }
+
+  Future<Map<String, dynamic>> getBookingMessages(String bid) async {
+    return _client.get('${ApiEndpoints.baseHttpUrl}/api/v1/booking/$bid/messages');
+  }
+
+  Future<Map<String, dynamic>> postBookingMessage(
+    String bid, {
+    required String senderId,
+    required String senderRole,
+    required String text,
+  }) async {
+    return _client.post(
+      '${ApiEndpoints.baseHttpUrl}/api/v1/booking/$bid/messages',
+      {
+        'sender_id': senderId,
+        'sender_role': senderRole,
+        'text': text,
+      },
+    );
+  }
+
   // ── WebSocket: Agent Stream ───────────────────────────────────────────────
 
   /// Connects to /ws/agent-stream and returns a stream of real-time

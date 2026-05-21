@@ -41,9 +41,8 @@ class BookingNotifier extends StateNotifier<BookingState> {
 
   /// Loads all bookings for [userId] from the backend.
   ///
-  /// Falls back to [MockDataService.bookings] when the backend is unreachable,
-  /// and marks [BookingState.isOffline] = true so the UI can show a banner.
-  Future<void> loadBookings(String userId) async {
+  /// Falls back to mock data only when backend was offline at startup.
+  Future<void> loadBookings(String userId, {bool? backendWasOnline}) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final response = await apiService.getUserBookings(userId);
@@ -67,13 +66,15 @@ class BookingNotifier extends StateNotifier<BookingState> {
         bookings: bookings,
         isOffline: false,
       );
-    } catch (_) {
-      // Backend unreachable → serve mock data as offline fallback.
+    } catch (e) {
+      final useMock = backendWasOnline == false;
       state = state.copyWith(
         isLoading: false,
-        bookings: List<Booking>.from(MockDataService.bookings),
+        bookings: useMock ? List<Booking>.from(MockDataService.bookings) : const [],
         isOffline: true,
-        error: 'Offline mode — showing cached data',
+        error: useMock
+            ? 'Offline mode — showing sample data'
+            : 'Could not load bookings. Pull to retry.',
       );
     }
   }
@@ -103,6 +104,7 @@ class BookingNotifier extends StateNotifier<BookingState> {
           shortDate: b.shortDate,
           timePill: b.timePill,
           apiStatusRaw: newStatus,
+          distanceKm: b.distanceKm,
         );
       }).toList();
       state = state.copyWith(bookings: updated);
@@ -115,8 +117,12 @@ class BookingNotifier extends StateNotifier<BookingState> {
   ///
   /// Reloads all bookings from the backend (preferred over a separate endpoint
   /// to avoid double HTTP clients). Returns the matching [Booking] or null.
-  Future<Booking?> fetchBooking(String bid, {String? currentUserId}) async {
-    await loadBookings(currentUserId ?? 'user_demo_001');
+  Future<Booking?> fetchBooking(
+    String bid, {
+    String? currentUserId,
+    bool backendWasOnline = true,
+  }) async {
+    await loadBookings(currentUserId ?? 'user_demo_001', backendWasOnline: backendWasOnline);
     try {
       return state.bookings.firstWhere((b) => b.id == bid);
     } catch (_) {
@@ -160,6 +166,7 @@ class BookingNotifier extends StateNotifier<BookingState> {
           shortDate: date,
           timePill: time.isNotEmpty ? 'Aaj $time' : '',
           apiStatusRaw: b.apiStatusRaw,
+          distanceKm: b.distanceKm,
         );
       }).toList();
 

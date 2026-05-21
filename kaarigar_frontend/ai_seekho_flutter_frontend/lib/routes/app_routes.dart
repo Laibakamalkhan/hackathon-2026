@@ -36,4 +36,5 @@ abstract final class AppRoutes {
   static const disputeResolution = '/dispute-resolution';
   static const disputeResolving = '/dispute-resolving';
   static const confidenceMeter = '/confidence-meter';
+  static const stressScenarios = '/stress-scenarios';
 }

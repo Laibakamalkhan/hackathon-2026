@@ -7,3 +7,7 @@ pydantic>=2.9.0
 pydantic-settings>=2.5.0
 websockets>=12.0
 httpx>=0.27.0
+
+# Optional (Linux/macOS only — no Windows wheel on PyPI as of 0.1.0):
+#   pip install google-antigravity
+# Backend uses native Gemini agents when the SDK is absent; see orchestrator/antigravity_workflow.py

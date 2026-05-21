@@ -72,7 +72,7 @@ ai-seekho-hackathon-2026/
 | `POST` | `/api/v1/agent/resolve` | `{booking_id, dispute_type, description, user_id}` | `{dispute_id, resolution, refund_amount, ...}` | GuardianAgent |
 | `POST` | `/api/v1/feedback/submit` | `{booking_id, rating, comment, user_id}` | `{saved, new_rating, ...}` | GuardianAgent |
 | `GET` | `/api/v1/bookings` | `?user_id=<uid>` | `{bookings: [...], count}` | Firestore query |
-| `PATCH` | `/api/v1/booking/{bid}/status` | `{status}` | `{bid, new_status, updated_at}` | Firestore update |
+| `PATCH` | `/api/v1/booking/{bid}/status` | `{status?, scheduled_time?}` (≥1 required) | `{bid, new_status, scheduled_time, updated_at}` | Firestore update |
 | `WS` | `/ws/agent-stream` | `{query, lat, lng, session_id, conversation_history?}` | Stream: `{event, content, timestamp}` + final `{event:"completed", providers, quote}` | CoordinatorAgent |
 
 #### `AgentHandoff` required fields (from `agents/shared/state.py`)

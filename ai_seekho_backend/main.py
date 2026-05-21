@@ -25,6 +25,22 @@ from agents.coordinator_agent import CoordinatorAgent
 from agents.executor_agent import ExecutorAgent
 from agents.guardian_agent import GuardianAgent
 from agents.shared.state import CoordinatorState, AgentHandoff
+from orchestrator.antigravity_workflow import (
+    run_coordinate_node,
+    run_execute_node,
+    run_resolve_node,
+    get_platform_status,
+)
+from services.booking_service import (
+    list_provider_bookings,
+    provider_dashboard_stats,
+    list_chat_messages,
+    post_chat_message,
+    auto_reschedule_after_provider_cancel,
+    get_booking,
+    estimate_eta_minutes,
+    DEFAULT_PROVIDER_ID,
+)
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -172,7 +188,8 @@ def read_root():
         "status": "online",
         "app": "AI Seekho Engine",
         "firebase_active": db is not None,
-        "gemini_active": bool(settings.GEMINI_API_KEY)
+        "gemini_active": bool(settings.GEMINI_API_KEY),
+        "antigravity": get_platform_status(),
     }
 
 @app.post("/api/match")
@@ -462,7 +479,7 @@ async def agent_coordinate(req: CoordinateRequest):
         })
 
         coordinator = _get_coordinator()
-        result = coordinator.run(state)
+        result = run_coordinate_node(coordinator, state)
 
         # Broadcast progressive trace events to simulate real-time thought logs
         for evt in result.get("trace_events", []):
@@ -513,6 +530,7 @@ async def agent_coordinate(req: CoordinateRequest):
             "confidence": result.get("confidence", 0.0),
             "trace_id": trace_id,
             "handoff": result.get("handoff"),
+            "antigravity": result.get("antigravity"),
             "updated_state": updated.model_dump() if updated else None
         }
         return result_out
@@ -537,7 +555,7 @@ async def agent_execute(req: ExecuteRequest, uid: str = Depends(get_current_user
                 raise HTTPException(status_code=403, detail="Forbidden: User ID mismatch in handoff context")
         handoff = AgentHandoff(**req.handoff)
         executor = _get_executor()
-        result = executor.execute_booking(handoff)
+        result = run_execute_node(executor, handoff)
         return result
     except Exception as e:
         logger.error(f"agent_execute error: {e}", exc_info=True)
@@ -576,11 +594,12 @@ async def agent_resolve(req: ResolveDisputeRequest, uid: str = Depends(get_curre
     try:
         dispute_id = f"DS-{uuid.uuid4().hex[:6].upper()}"
         guardian = _get_guardian()
-        result = guardian.resolve_dispute(
+        result = run_resolve_node(
+            guardian,
             dispute_id=dispute_id,
             booking_id=req.booking_id,
             dispute_type=normalized_type,
-            description=req.description
+            description=req.description,
         )
         return result
     except HTTPException:
@@ -641,6 +660,100 @@ async def get_user_bookings(user_id: str, uid: str = Depends(get_current_user_id
     except Exception as e:
         logger.error(f"get_user_bookings error: {e}")
         return {"bookings": [], "count": 0, "error": str(e)}
+
+
+class ProviderStatusRequest(BaseModel):
+    status: str
+
+
+class ChatMessageRequest(BaseModel):
+    sender_id: str
+    sender_role: str  # consumer | provider
+    text: str
+
+
+@app.get("/api/v1/provider/{provider_id}/dashboard")
+async def provider_dashboard(provider_id: str, uid: str = Depends(get_current_user_id)):
+    """Provider workload stats and upcoming/active job lists."""
+    _ = uid
+    return provider_dashboard_stats(provider_id)
+
+
+@app.get("/api/v1/provider/{provider_id}/bookings")
+async def provider_bookings(provider_id: str, uid: str = Depends(get_current_user_id)):
+    _ = uid
+    bookings = list_provider_bookings(provider_id)
+    return {"bookings": bookings, "count": len(bookings)}
+
+
+@app.patch("/api/v1/provider/booking/{bid}/status")
+async def provider_booking_status(
+    bid: str,
+    req: ProviderStatusRequest,
+    uid: str = Depends(get_current_user_id),
+):
+    """Provider updates job status (en_route, in_progress, completed, cancelled)."""
+    _ = uid
+    valid = ["confirmed", "en_route", "in_progress", "completed", "cancelled"]
+    if req.status not in valid:
+        raise HTTPException(status_code=400, detail=f"status must be one of {valid}")
+    result = {"bid": bid, "new_status": req.status, "updated_at": datetime.now().isoformat()}
+    if not db:
+        result["warning"] = "firestore_unavailable"
+        return result
+    db.collection("bookings").document(bid).update(
+        {"status": req.status, "updated_at": result["updated_at"]}
+    )
+    if req.status == "cancelled":
+        result["auto_reschedule_hint"] = (
+            f"POST /api/v1/booking/{bid}/auto-reschedule for alternate provider"
+        )
+    return result
+
+
+@app.post("/api/v1/booking/{bid}/auto-reschedule")
+async def booking_auto_reschedule(
+    bid: str,
+    uid: str = Depends(get_current_user_id),
+    lat: float = 33.649,
+    lng: float = 72.973,
+):
+    """Consumer accepts alternate provider after cancellation."""
+    booking = get_booking(bid)
+    if booking and booking.get("user_id") != uid and settings.ENV != "development":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return auto_reschedule_after_provider_cancel(bid, lat, lng)
+
+
+@app.get("/api/v1/booking/{bid}/messages")
+async def booking_messages(bid: str, uid: str = Depends(get_current_user_id)):
+    booking = get_booking(bid)
+    if booking and booking.get("user_id") != uid and settings.ENV != "development":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return {"messages": list_chat_messages(bid)}
+
+
+@app.post("/api/v1/booking/{bid}/messages")
+async def booking_post_message(
+    bid: str,
+    req: ChatMessageRequest,
+    uid: str = Depends(get_current_user_id),
+):
+    booking = get_booking(bid)
+    if booking and booking.get("user_id") != uid and req.sender_role == "consumer":
+        if settings.ENV != "development":
+            raise HTTPException(status_code=403, detail="Forbidden")
+    msg = post_chat_message(bid, req.sender_id or uid, req.sender_role, req.text)
+    return {"message": msg}
+
+
+@app.get("/api/v1/booking/{bid}/eta")
+async def booking_eta(bid: str):
+    booking = get_booking(bid) or {}
+    dist = float(booking.get("distance_km") or 3.0)
+    status = (booking.get("status") or "").lower()
+    eta = estimate_eta_minutes(dist, status)
+    return {"bid": bid, "status": status, "distance_km": dist, "eta_minutes": eta}
 
 
 @app.patch("/api/v1/booking/{bid}/status")
@@ -743,7 +856,7 @@ async def websocket_agent_stream(websocket: WebSocket):
                     "timestamp": datetime.now().isoformat()
                 })
 
-                result = coordinator.run(state)
+                result = run_coordinate_node(coordinator, state)
 
                 # Replay all trace events
                 for evt in result.get("trace_events", []):
@@ -772,6 +885,7 @@ async def websocket_agent_stream(websocket: WebSocket):
                     "providers": result.get("providers"),
                     "quote": result.get("quote"),
                     "handoff": result.get("handoff"),
+                    "antigravity": result.get("antigravity"),
                     "extracted_fields": (
                         updated_state.extracted_fields
                         if updated_state and hasattr(updated_state, "extracted_fields")

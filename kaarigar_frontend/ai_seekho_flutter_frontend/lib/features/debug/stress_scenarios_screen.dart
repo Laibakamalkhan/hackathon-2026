@@ -110,7 +110,7 @@ class _ScenarioButton extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 32, color: AppColors.primary),
+            Icon(icon, size: 32, color: AppColors.accentLavender),
             const SizedBox(width: 16),
             Expanded(
               child: Column(

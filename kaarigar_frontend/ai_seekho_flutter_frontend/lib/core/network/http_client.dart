@@ -47,6 +47,23 @@ class HttpClient {
     }
   }
 
+  Future<Map<String, dynamic>> patch(
+    String url,
+    Map<String, dynamic> body,
+  ) async {
+    try {
+      final response = await _client.patch(
+        Uri.parse(url),
+        headers: _headers,
+        body: json.encode(body),
+      );
+      return _processResponse(response);
+    } catch (e) {
+      if (e is HttpException) rethrow;
+      throw HttpException(500, 'Network error: ${e.toString()}');
+    }
+  }
+
   Future<Map<String, dynamic>> post(
     String url,
     Map<String, dynamic> body,
